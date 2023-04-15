@@ -1,3 +1,21 @@
+## 当前选题
+
+### 推荐系统
+
+[推荐系统in python](https://www.datacamp.com/tutorial/recommender-systems-python)
+
+
+
+### taxi
+
+[openai gym](https://www.gocoder.one/blog/rl-tutorial-with-openai-gym/)
+
+
+
+
+
+
+
 [project idea 整合网站](https://www.gocoder.one/blog/reinforcement-learning-project-ideas/#3-simulate-control-tasks-with-pybullet) 
 
 包括了：
@@ -15,8 +33,6 @@
 
 
 #### recommender system
-
-[python](https://www.datacamp.com/tutorial/recommender-systems-python)
 
 
 
