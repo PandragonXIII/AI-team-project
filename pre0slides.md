@@ -4,7 +4,9 @@ presentation:
 ---
 
 <!-- slide -->
-
+# AI project
+郭子杨 齐修远
+<!-- slide -->
 #### taxi
 <!-- slide -->
 ## part1 问题定义
