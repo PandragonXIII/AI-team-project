@@ -11,6 +11,13 @@
 [openai gym](https://www.gocoder.one/blog/rl-tutorial-with-openai-gym/)
 
 ---
+## 一些教程
+### say goodbye to ppt
+1. Markdown Preview Enhanced [官方中文文档](https://shd101wyy.github.io/markdown-preview-enhanced/#/zh-cn/presentation?id=presentation-front-matter)
+   在vscode插件商店下载*Markdown Preview Enhanced* 
+2. 右键md文档 `MPE: 打开侧边预览` 来浏览slides
+3. 在幻灯片预览界面右键可以在浏览器中打开
+4. ~~uninstall microsoft ppt~~
 
 ### 开始使用Git
 
@@ -44,6 +51,7 @@
 
 6. 新建分支 [懒得写了](https://www.runoob.com/git/git-branch.html) 
 
+**Tips**: 你还是可以在vscode中安装插件来解决一切问题，赞美vscode
 
 
 ---
