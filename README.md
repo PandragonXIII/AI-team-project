@@ -8,7 +8,11 @@
 
 ### taxi
 
-[openai gym](https://www.gocoder.one/blog/rl-tutorial-with-openai-gym/)
+[taxi tutorial](https://www.gocoder.one/blog/rl-tutorial-with-openai-gym/)
+
+### openai gym
+有很多小游戏，包括taxi
+[openai gym](https://gymnasium.farama.org/)
 
 ---
 ## 一些教程
