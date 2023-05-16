@@ -1,12 +1,15 @@
 import gymnasium as gym
-env = gym.make("Taxi-v3", render_mode="human")
+
+env = gym.make("Taxi-v3")
+'''
+reinformance learning verion
+'''
 observation, info = env.reset()
+train_times = 1000
+trail_time_limit = 200 # 200 steps
 
-for _ in range(1000):
-    action = env.action_space.sample()  # agent policy that uses the observation and info
-    observation, reward, terminated, truncated, info = env.step(action)
+for _ in range(train_times):
+    pass
 
-    if terminated or truncated:
-        observation, info = env.reset()
 
 env.close()
