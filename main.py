@@ -27,6 +27,7 @@ Rewards:
 '''
 env = gym.make("Taxi-v3")
 AGENT_TYPE = "random"
+test_times = 5
 
 """
 note that we only have one passenger in each episode for now.
@@ -43,9 +44,28 @@ else:
     raise Exception("unknown agent type")
 
 # start training
+print("-----training-----")
 observation, info = env.reset()
 for _ in range(train_times):
-    pass
+    print(".", end="")
+    observation, info = env.reset()
+    terminated, truncated = False, False
+    while not( terminated or truncated):
+        action = agent.train(observation)
+        observation, reward, terminated, truncated, info = env.step(action)
 
+# start testing
+for _ in range(test_times):
+    observation, info = env.reset()
+    terminated, truncated = False, False
+    print("-----test:{}-----".format(_))
+    total_reward = 0
+    while not( terminated or truncated):
+        action = agent.get_best_action(observation)
+        observation, reward, terminated, truncated, info = env.step(action)
+        total_reward += reward
+    # game will terminate automatically after 200 steps
+    # print the final score
+    print("score: ", total_reward)
 
 env.close()

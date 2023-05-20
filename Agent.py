@@ -40,4 +40,5 @@ class ReinforcementAgent(Agent):
         pass
 
     def get_best_action(self, observation):
+        # find the action with max q value in present state
         return np.argmax(self.q_table, axis = observation)
