@@ -1,3 +1,9 @@
+## TODO
+- [ ] 测试Q-learning agent表现
+   - [ ] 测试不同训练次数下的表现
+   - [ ] 可视化
+- [ ] 实现近似Q-Learning
+
 ## taxi
 
 [taxi tutorial](https://www.gocoder.one/blog/rl-tutorial-with-openai-gym/)
