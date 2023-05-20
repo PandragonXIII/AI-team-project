@@ -26,7 +26,8 @@ Rewards:
 '''
 env = gym.make("Taxi-v3")
 AGENT_TYPE = "reinforcement"
-test_times = 0
+test_times = 10
+display_times = 10
 
 """
 note that we only have one passenger in each episode for now.
@@ -74,7 +75,7 @@ env.close()
 env = gym.make("Taxi-v3", render_mode="human")
 # display
 print("-----display-----")
-for _ in range(10):
+for _ in range(display_times):
     observation, info = env.reset()
     terminated, truncated = False, False
     rewards = 0
