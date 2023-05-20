@@ -1,5 +1,4 @@
 import gymnasium as gym
-import numpy as np
 import Agent
 
 '''
@@ -26,8 +25,8 @@ Rewards:
 
 '''
 env = gym.make("Taxi-v3")
-AGENT_TYPE = "random"
-test_times = 5
+AGENT_TYPE = "reinforcement"
+test_times = 0
 
 """
 note that we only have one passenger in each episode for now.
@@ -38,21 +37,24 @@ if AGENT_TYPE == "random":
     train_times = 0 # random agent does not need training
 elif AGENT_TYPE == "reinforcement":
     agent = Agent.ReinforcementAgent(env.observation_space, env.action_space,
-                                     learning_rate=0.1, discount_factor=0.9)
-    train_times = 1000
+                                     learning_rate=0.05, discount_factor=0.99,
+                                     explore=1)
+    train_times = 5000
 else:
     raise Exception("unknown agent type")
 
 # start training
 print("-----training-----")
-observation, info = env.reset()
 for _ in range(train_times):
     print(".", end="")
     observation, info = env.reset()
     terminated, truncated = False, False
     while not( terminated or truncated):
-        action = agent.train(observation)
+        action = agent.explore(observation)
+        old_observation = observation
         observation, reward, terminated, truncated, info = env.step(action)
+        agent.update(old_observation, action, observation, reward)
+print("\n")
 
 # start testing
 for _ in range(test_times):
@@ -67,5 +69,23 @@ for _ in range(test_times):
     # game will terminate automatically after 200 steps
     # print the final score
     print("score: ", total_reward)
+env.close()
+
+env = gym.make("Taxi-v3", render_mode="human")
+# display
+print("-----display-----")
+for _ in range(10):
+    observation, info = env.reset()
+    terminated, truncated = False, False
+    rewards = 0
+    for s in range(30):
+        action = agent.get_best_action(observation)
+        new_observation, reward, terminated, truncated, info = env.step(action)
+        rewards += reward
+        # env.render()
+        observation = new_observation
+
+        if terminated or truncated:
+            break
 
 env.close()
