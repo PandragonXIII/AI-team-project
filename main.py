@@ -1,6 +1,7 @@
 import gymnasium as gym
 import Agent
 import random
+import numpy as np
 
 '''
 env.action_space: 
@@ -25,6 +26,13 @@ Rewards:
     -10 executing “pickup” and “drop-off” actions illegally.
 
 '''
+
+#WEATHERS = {"sun":0, "cloudy":1, "rain":2}
+WEATHERS = ["sun", "cloudy", "rain"]
+WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
+                               [0.15,0.4, 0.45],
+                               [0.3, 0.4, 0.3]])
+
 def main(AGENT_TYPE = "reinforcement",
         test_times = 10,
         display_times = 10,
@@ -36,7 +44,7 @@ def main(AGENT_TYPE = "reinforcement",
         ):
     env = gym.make("Taxi-v3")
     AGENT_TYPE = "search"
-    test_times = 500 # 1 - 500
+    test_times = 10 # 1 - 500
     display_times = 5
     FROG_OF_WAR = False
 
@@ -44,6 +52,9 @@ def main(AGENT_TYPE = "reinforcement",
     note that we only have one passenger in each episode for now.
     车的行为是确定性的, 需要学习的应该是墙的位置和乘客的位置
     """
+
+    print("Agent Type: ",AGENT_TYPE)
+
     if AGENT_TYPE == "random":
         agent = Agent.RandomAgent(env)
         train_times = 0 # random agent does not need training
@@ -69,7 +80,7 @@ def main(AGENT_TYPE = "reinforcement",
         """
         terminated, truncated = False, False
         if FROG_OF_WAR:
-            observation = Agent.AddFrogToObs(env, observation, visible_dis=2)        
+            observation = Agent.AddFrogToObs(env, observation)        
         while not( terminated or truncated):
             action = agent.explore(observation)
             old_observation = observation
@@ -81,11 +92,15 @@ def main(AGENT_TYPE = "reinforcement",
     # start testing
     testcases=list(range(500))
     random.shuffle(testcases)
+    weather=random.choice(range(3)) # initial weather: all equally likely
     for _ in range(test_times):
         observation, info = env.reset(state = testcases[_])
         observation = list(env.decode(observation))
         terminated, truncated = False, False
         print("-----test:{}-----".format(_))
+        print("WEATHER:", WEATHERS[weather])
+        if FROG_OF_WAR:
+            observation = Agent.AddFrogToObs(env, observation)   
         total_reward = 0
         while not( terminated or truncated):
             action = agent.get_best_action(observation)
@@ -95,6 +110,19 @@ def main(AGENT_TYPE = "reinforcement",
         # game will terminate automatically after 200 steps
         # print the final score
         print("score: ", total_reward)
+
+        #change weather
+        r=random.random()
+        nextweather=0
+        s=0.0
+        for prob in WEATHER_TRANSITION[weather]: # get next weather by probabilities
+            s+=prob
+            if r<=s:
+                break
+            nextweather+=1
+        if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
+        weather=nextweather
+
     env.close()
 
     env = gym.make("Taxi-v3", render_mode="human")
@@ -104,6 +132,8 @@ def main(AGENT_TYPE = "reinforcement",
         observation, info = env.reset()
         observation = list(env.decode(observation))
         terminated, truncated = False, False
+        if FROG_OF_WAR:
+            observation = Agent.AddFrogToObs(env, observation)  
         rewards = 0
         for s in range(30):
             action = agent.get_best_action(observation)
@@ -120,6 +150,7 @@ def main(AGENT_TYPE = "reinforcement",
 
 if __name__ == "__main__":
     main()
+
 
 def single_test(AGENT_TYPE = "reinforcement",
         test_times = 10,
@@ -162,7 +193,7 @@ def single_test(AGENT_TYPE = "reinforcement",
         """
         terminated, truncated = False, False
         if FROG_OF_WAR:
-            observation = Agent.AddFrogToObs(env, observation, visible_dis=2)        
+            observation = Agent.AddFrogToObs(env, observation)        
         while not( terminated or truncated):
             action = agent.explore(observation)
             old_observation = observation
@@ -189,4 +220,3 @@ def single_test(AGENT_TYPE = "reinforcement",
         scores.append(total_reward)
     env.close()
     return scores
-    
