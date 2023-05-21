@@ -181,3 +181,59 @@ class SearchAgent(Agent):
         if taxi_col > 0 and self.env.desc[taxi_row + 1, 2 * taxi_col] == b":":
             ret.append(((taxi_row, taxi_col - 1), 3)) # west
         return ret
+    
+
+class MarkovAgent(Agent):
+    """
+    Markov Agent can deal with fog of war, in which passenger is invisible
+    use passenger position as evidence variable
+        taxi knows there is a hidded variable (weather)
+    that influences the passenger position distribution
+        it can infer the passenger position distribution, 
+    based on its observation of past positions
+    """
+    def __init__(self, env, discount_factor=0.9, explore_constant=0.1):
+        super(MarkovAgent, self).__init__(env)
+        self.explore_constant = explore_constant
+        self.discount_factor = discount_factor
+        self.q_table = np.zeros((self.env.observation_space.n, self.env.action_space.n, 2))
+        self.q_table[:,:,1] = 1
+        return
+    
+    def explore(self, observation):
+        raise Exception("markov agent does not need training")
+    
+    def get_best_action(self, observation):
+        #if observation is iterable 
+        if not isinstance(observation, int): # observation is tuple
+            if None in observation:
+                raise Exception("invisible passenger")
+            else:
+                taxi_row, taxi_col, passenger_location, destination = observation
+                observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
+        else:
+            taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
+        # do as usual (int)
+        if passenger_location==4 and (taxi_row, taxi_col) == self.env.locs[destination]: #taxi at destination
+            return 5 #drop off
+        if passenger_location!=4 and (taxi_row, taxi_col) == self.env.locs[passenger_location]: #taxi at passenger
+            return 4 #pick up
+        return self.get_best_action_markov(observation)
+    
+    def get_best_action_markov(self, observation):
+        #if observation is iterable 
+        if not isinstance(observation, int): # observation is tuple
+            if None in observation:
+                raise Exception("invisible passenger")
+            else:
+                taxi_row, taxi_col, passenger_location, destination = observation
+                observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
+        else:
+            taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
+        # do as usual (int)
+        next_actions = self.q_table[observation]
+        next_actions = next_actions[:,0]+self.explore_constant/next_actions[:,1]
+        return np.argmax(next_actions)
+    
+    def update(self, old_observation, action, observation, reward):
+        raise Exception("markov agent does not need training")
