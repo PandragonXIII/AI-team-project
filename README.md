@@ -1,6 +1,6 @@
 ## TODO
 - [ ] 测试Q-learning agent表现
-   - [ ] 测试不同训练次数下的表现
+   - [x] 测试不同训练次数下的表现
    - [ ] 可视化
 - [ ] 实现近似Q-Learning
 - [x] 实现search agent

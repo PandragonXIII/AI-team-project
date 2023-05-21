@@ -34,7 +34,7 @@ WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
                                [0.3, 0.4, 0.3]])
 
 def main(AGENT_TYPE = "reinforcement",
-        test_times = 10,
+        test_times = 500,
         display_times = 10,
         FROG_OF_WAR = False,
         train_times = 3000,
@@ -62,8 +62,8 @@ def main(AGENT_TYPE = "reinforcement",
         agent = Agent.ReinforcementAgent(env,
                         learning_rate=l_rate, discount_factor=d_factor, explore=expl)
     elif AGENT_TYPE == "search":
-        agent = Agent.SearchAgent(env)
-        train_times = 0 # search agent does not need training
+        agent = Agent.SearchAgent(env) # search agent does not need training
+        train_times = 0
     else:
         raise Exception("unknown agent type")
 
@@ -88,6 +88,9 @@ def main(AGENT_TYPE = "reinforcement",
             observation = list(env.decode(observation))
             agent.update(old_observation, action, observation, reward)
     print("\n")
+    
+    single_test(AGENT_TYPE, test_times, FROG_OF_WAR, train_times, 
+                l_rate, d_factor, expl, mute = False, agent = agent)
 
     # start testing
     testcases=list(range(500))
@@ -159,7 +162,8 @@ def single_test(AGENT_TYPE = "reinforcement",
         l_rate = 0.1,
         d_factor = 0.99,
         expl = 1,
-        mute = False
+        mute = False,
+        agent = None,
         )->list:
     """
     single trin-test loop
@@ -167,17 +171,18 @@ def single_test(AGENT_TYPE = "reinforcement",
     """
     env = gym.make("Taxi-v3")
 
-    if AGENT_TYPE == "random":
-        agent = Agent.RandomAgent(env)
-        train_times = 0 # random agent does not need training
-    elif AGENT_TYPE == "reinforcement":
-        agent = Agent.ReinforcementAgent(env,
-                        learning_rate=l_rate, discount_factor=d_factor, explore=expl)
-    elif AGENT_TYPE == "search":
-        agent = Agent.SearchAgent(env)
-        train_times = 0
-    else:
-        raise Exception("unknown agent type")
+    if agent is None:
+        if AGENT_TYPE == "random":
+            agent = Agent.RandomAgent(env)
+            train_times = 0 # random agent does not need training
+        elif AGENT_TYPE == "reinforcement":
+            agent = Agent.ReinforcementAgent(env,
+                            learning_rate=l_rate, discount_factor=d_factor, explore=expl)
+        elif AGENT_TYPE == "search":
+            agent = Agent.SearchAgent(env) # search agent does not need training
+            train_times = 0
+        else:
+            raise Exception("unknown agent type")
 
     # start training
     if not mute:
@@ -217,6 +222,13 @@ def single_test(AGENT_TYPE = "reinforcement",
             observation, reward, terminated, truncated, info = env.step(action)
             observation = list(env.decode(observation))
             total_reward += reward
+        # game will terminate automatically after 200 steps
+        # print the final score
+        if not mute:
+            print("score: ", total_reward)
         scores.append(total_reward)
     env.close()
     return scores
+    
+if __name__ == "__main__":
+    main()
