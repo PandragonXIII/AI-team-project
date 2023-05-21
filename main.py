@@ -37,15 +37,19 @@ PASSENGER_LOC_PROB = np.array([[0.3, 0.2, 0.2, 0.3],
                                [0.2, 0.3, 0.3, 0.2],
                                [0.7, 0.1, 0.1, 0.1]]) # 随便设的概率
 
-def main(AGENT_TYPE = "reinforcement",
+'''def main(AGENT_TYPE = "reinforcement",
         test_times = 500,
         display_times = 10,
         FROG_OF_WAR = False,
         train_times = 3000,
         l_rate = 0.1,
         d_factor = 0.99,
-        expl = 1,
-        ):
+        expl = 1
+        ):'''
+def main():
+    
+    single_test("search",withWeather=True)
+    
     '''env = gym.make("Taxi-v3")
     AGENT_TYPE = "search"
     test_times = 10 # 1 - 500
@@ -215,6 +219,7 @@ def single_test(AGENT_TYPE = "reinforcement",
 
     # start testing
     if withWeather:
+        testcases = []
         for _ in range(test_times):
             taxi_row = random.choice(range(5))
             taxi_col = random.choice(range(5))
@@ -236,12 +241,14 @@ def single_test(AGENT_TYPE = "reinforcement",
         random.shuffle(testcases)
     scores = []
     for _ in range(test_times):
-        observation, info = env.reset(testcases[_])
+        observation, info = env.reset(state = testcases[_])
         observation = list(env.decode(observation))
         terminated, truncated = False, False
         if not mute:
             print("-----test:{}-----".format(_))
-            if withWeather: print("WEATHER:", WEATHERS[weather])
+            if withWeather: 
+                print("WEATHER:", WEATHERS[weather])
+                print("passenger loc:",env.locs[observation[2]])
         if FROG_OF_WAR:
             observation = Agent.AddFrogToObs(env, observation)  
         total_reward = 0
@@ -266,7 +273,7 @@ def single_test(AGENT_TYPE = "reinforcement",
                 if r<=s:
                     break
                 nextweather+=1
-            if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
+            #if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
             weather=nextweather
 
     env.close()

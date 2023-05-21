@@ -249,8 +249,16 @@ class MarkovSearchAgent(SearchAgent):
     def get_best_action(self, observation):
         if not isinstance(observation, int): # observation is tuple
             taxi_row, taxi_col, passenger_location, destination = observation
-            observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
+            if None in observation:
+                paths=[]
+                for loc in range(4):
+                    paths.append(self.search(self.env.encode(taxi_row, taxi_col, loc, 0)))
+                if not self.prevlocs:
+                    
+            else:
+                self.prevlocs.append(passenger_location)
+                super(MarkovSearchAgent, self).get_best_action(observation)
         else:
             taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
-        
-        if 
+            self.prevlocs.append(passenger_location)
+            super(MarkovSearchAgent, self).get_best_action(observation)
