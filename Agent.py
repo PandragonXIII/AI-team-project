@@ -160,7 +160,7 @@ class SearchAgent(Agent):
             currentstate=csnode[0]
             if currentstate==goal:
                 return csnode[1]
-            for s in self.__getSuccessors(currentstate):
+            for s in self._getSuccessors(currentstate):
                 if s[0] not in visited:
                     visited.add(s[0])
                     path=csnode[1].copy()
@@ -169,7 +169,7 @@ class SearchAgent(Agent):
         print('NO PATH FOUND')
         return []
     
-    def __getSuccessors(self,currentstate):
+    def _getSuccessors(self,currentstate):
         ret=[]
         taxi_row, taxi_col = currentstate
         if taxi_row < 4:
