@@ -31,7 +31,11 @@ Rewards:
 WEATHERS = ["sun", "cloudy", "rain"]
 WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
                                [0.15,0.4, 0.45],
-                               [0.3, 0.4, 0.3]])
+                               [0.3, 0.4, 0.3]]) # 随便设的概率
+
+PASSENGER_LOC_PROB = np.array([[0.3, 0.2, 0.2, 0.3],
+                               [0.2, 0.3, 0.3, 0.2],
+                               [0.7, 0.1, 0.1, 0.1]]) # 随便设的概率
 
 def main(AGENT_TYPE = "reinforcement",
         test_times = 500,
@@ -42,7 +46,7 @@ def main(AGENT_TYPE = "reinforcement",
         d_factor = 0.99,
         expl = 1,
         ):
-    env = gym.make("Taxi-v3")
+    '''env = gym.make("Taxi-v3")
     AGENT_TYPE = "search"
     test_times = 10 # 1 - 500
     display_times = 5
@@ -126,9 +130,9 @@ def main(AGENT_TYPE = "reinforcement",
         if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
         weather=nextweather
 
-    env.close()
+    env.close()'''
 
-    env = gym.make("Taxi-v3", render_mode="human")
+    '''env = gym.make("Taxi-v3", render_mode="human")
     # display
     print("-----display-----")
     for _ in range(display_times):
@@ -149,27 +153,28 @@ def main(AGENT_TYPE = "reinforcement",
             if terminated or truncated:
                 break
 
-    env.close()
-
-if __name__ == "__main__":
-    main()
-
+    env.close()'''
+    
 
 def single_test(AGENT_TYPE = "reinforcement",
-        test_times = 10,
-        FROG_OF_WAR = False,
+        agent = None,
+        mute = False,
         train_times = 3000,
+        test_times = 10,
+        withWeather = False,
+        FROG_OF_WAR = False,
         l_rate = 0.1,
         d_factor = 0.99,
         expl = 1,
-        mute = False,
-        agent = None,
         )->list:
     """
     single trin-test loop
     return: list of scores, len = test_times
     """
     env = gym.make("Taxi-v3")
+
+    if not mute:
+        print("Agent Type: ",AGENT_TYPE)
 
     if agent is None:
         if AGENT_TYPE == "random":
@@ -209,13 +214,36 @@ def single_test(AGENT_TYPE = "reinforcement",
         print("\n")
 
     # start testing
+    if withWeather:
+        for _ in range(test_times):
+            taxi_row = random.choice(range(5))
+            taxi_col = random.choice(range(5))
+            dest = random.choice(range(5))
+            weather=random.choice(range(3)) # initial weather: all equally likely
+            # get pass_loc by probabilities
+            r=random.random()
+            pass_loc=0
+            s=0.0
+            for prob in PASSENGER_LOC_PROB[weather]: # get next weather by probabilities
+                s+=prob
+                if r<=s:
+                    break
+                pass_loc+=1
+                #if pass_loc>2: pass_loc=2 # in case potential overflow (chance extremely small)
+            testcases.append(env.encode(taxi_row, taxi_col, pass_loc, dest))
+    else:
+        testcases=list(range(500))
+        random.shuffle(testcases)
     scores = []
     for _ in range(test_times):
-        observation, info = env.reset()
+        observation, info = env.reset(testcases[_])
         observation = list(env.decode(observation))
         terminated, truncated = False, False
         if not mute:
             print("-----test:{}-----".format(_))
+            if withWeather: print("WEATHER:", WEATHERS[weather])
+        if FROG_OF_WAR:
+            observation = Agent.AddFrogToObs(env, observation)  
         total_reward = 0
         while not( terminated or truncated):
             action = agent.get_best_action(observation)
@@ -227,6 +255,20 @@ def single_test(AGENT_TYPE = "reinforcement",
         if not mute:
             print("score: ", total_reward)
         scores.append(total_reward)
+
+        if withWeather:
+            #change weather
+            r=random.random()
+            nextweather=0
+            s=0.0
+            for prob in WEATHER_TRANSITION[weather]: # get next weather by probabilities
+                s+=prob
+                if r<=s:
+                    break
+                nextweather+=1
+            if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
+            weather=nextweather
+
     env.close()
     return scores
     
