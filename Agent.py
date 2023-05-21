@@ -1,5 +1,5 @@
 import numpy as np
-
+from queue import Queue
 
 def AddFrogToObs(env, observation:list, visible_dis : int =2)->list:
     """
@@ -110,7 +110,8 @@ class ReinforcementAgent(Agent):
 class SearchAgent(Agent):
     def __init__(self, env, search_depth = 2):
         super(SearchAgent, self).__init__(env)
-        self.search_depth = search_depth
+        self.search_path = None
+        self.search_path_step = -1
         return
     
     def explore(self, observation):
@@ -118,14 +119,65 @@ class SearchAgent(Agent):
     
     def get_best_action(self, observation):
         #if observation is iterable 
-        if not isinstance(observation, int):
+        if not isinstance(observation, int): # observation is tuple
             if None in observation:
                 raise Exception("invisible passenger")
             else:
                 taxi_row, taxi_col, passenger_location, destination = observation
                 observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
+        else:
+            taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
         # do as usual (int)
-        return self.search(observation, self.search_depth)[0]
+        if passenger_location==4 and (taxi_row, taxi_col) == self.env.locs[destination]: #taxi at destination
+            self.search_path = None
+            self.search_path_step = -1
+            return 5 #drop off
+        if passenger_location!=4 and (taxi_row, taxi_col) == self.env.locs[passenger_location]: #taxi at passenger
+            self.search_path = None
+            self.search_path_step = -1
+            return 4 #pick up
+        if self.search_path is None:
+            self.search_path = self.search(observation)
+        self.search_path_step += 1
+        return self.search_path[self.search_path_step]
     
-    def search(self, observation, depth):
-        pass
+    def search(self, observation: int):
+        '''Based on breadth-first search'''
+        taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
+        if passenger_location==4: #passenger in taxi
+            goal=self.env.locs[destination]
+        else:
+            goal=self.env.locs[passenger_location]
+        q=Queue()
+        visited=set()
+        taxiloc=(taxi_row, taxi_col)
+        #print("@ ",taxiloc)
+        #print("- ",goal)
+        q.put((taxiloc,[]))
+        visited.add(taxiloc)
+        while not q.empty():
+            csnode=q.get()
+            currentstate=csnode[0]
+            if currentstate==goal:
+                return csnode[1]
+            for s in self.__getSuccessors(currentstate):
+                if s[0] not in visited:
+                    visited.add(s[0])
+                    path=csnode[1].copy()
+                    path.append(s[1])
+                    q.put((s[0],path))
+        print('NO PATH FOUND')
+        return []
+    
+    def __getSuccessors(self,currentstate):
+        ret=[]
+        taxi_row, taxi_col = currentstate
+        if taxi_row < 4:
+            ret.append(((taxi_row + 1, taxi_col), 0)) # south
+        if taxi_row > 0:
+            ret.append(((taxi_row - 1, taxi_col), 1)) # north
+        if taxi_col < 4 and self.env.desc[taxi_row + 1, 2 * taxi_col + 2] == b":":
+            ret.append(((taxi_row, taxi_col + 1), 2)) # east
+        if taxi_col > 0 and self.env.desc[taxi_row + 1, 2 * taxi_col] == b":":
+            ret.append(((taxi_row, taxi_col - 1), 3)) # west
+        return ret

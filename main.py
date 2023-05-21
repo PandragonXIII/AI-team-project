@@ -1,5 +1,6 @@
 import gymnasium as gym
 import Agent
+import random
 
 '''
 env.action_space: 
@@ -27,8 +28,8 @@ Rewards:
 def main():
     env = gym.make("Taxi-v3")
     AGENT_TYPE = "search"
-    test_times = 10
-    display_times = 10
+    test_times = 500 # 1 - 500
+    display_times = 5
     FROG_OF_WAR = False
 
     """
@@ -45,7 +46,7 @@ def main():
         train_times = 3000
     elif AGENT_TYPE == "search":
         agent = Agent.SearchAgent(env)
-        train_times = 0
+        train_times = 0 # search agent does not need training
     else:
         raise Exception("unknown agent type")
 
@@ -72,8 +73,10 @@ def main():
     print("\n")
 
     # start testing
+    testcases=list(range(500))
+    random.shuffle(testcases)
     for _ in range(test_times):
-        observation, info = env.reset()
+        observation, info = env.reset(state = testcases[_])
         observation = list(env.decode(observation))
         terminated, truncated = False, False
         print("-----test:{}-----".format(_))
