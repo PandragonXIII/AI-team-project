@@ -26,7 +26,7 @@ Rewards:
 
 '''
 def main(AGENT_TYPE = "reinforcement",
-        test_times = 10,
+        test_times = 500,
         display_times = 10,
         FROG_OF_WAR = False,
         train_times = 3000,
@@ -34,16 +34,11 @@ def main(AGENT_TYPE = "reinforcement",
         d_factor = 0.99,
         expl = 1,
         ):
-    env = gym.make("Taxi-v3")
-    AGENT_TYPE = "search"
-    test_times = 500 # 1 - 500
-    display_times = 5
-    FROG_OF_WAR = False
-
     """
     note that we only have one passenger in each episode for now.
     车的行为是确定性的, 需要学习的应该是墙的位置和乘客的位置
     """
+    env = gym.make("Taxi-v3", render_mode="human")
     if AGENT_TYPE == "random":
         agent = Agent.RandomAgent(env)
         train_times = 0 # random agent does not need training
@@ -51,53 +46,15 @@ def main(AGENT_TYPE = "reinforcement",
         agent = Agent.ReinforcementAgent(env,
                         learning_rate=l_rate, discount_factor=d_factor, explore=expl)
     elif AGENT_TYPE == "search":
-        agent = Agent.SearchAgent(env)
-        train_times = 0 # search agent does not need training
+        agent = Agent.SearchAgent(env) # search agent does not need training
+        train_times = 0
     else:
         raise Exception("unknown agent type")
+    
+    single_test(AGENT_TYPE, test_times, FROG_OF_WAR, train_times, 
+                l_rate, d_factor, expl, mute = False, agent = agent)
 
-    # start training
-    print("-----training-----")
-    for _ in range(train_times):
-        print(".", end="")
-        observation, info = env.reset()
-        observation = list(env.decode(observation))
-        """
-        ATTENTION!
-        observation = [taxi_row, taxi_col, passenger_location, destination]
-        observation is always list now, 除非是在函数中作为index使用
-        """
-        terminated, truncated = False, False
-        if FROG_OF_WAR:
-            observation = Agent.AddFrogToObs(env, observation, visible_dis=2)        
-        while not( terminated or truncated):
-            action = agent.explore(observation)
-            old_observation = observation
-            observation, reward, terminated, truncated, info = env.step(action)
-            observation = list(env.decode(observation))
-            agent.update(old_observation, action, observation, reward)
-    print("\n")
-
-    # start testing
-    testcases=list(range(500))
-    random.shuffle(testcases)
-    for _ in range(test_times):
-        observation, info = env.reset(state = testcases[_])
-        observation = list(env.decode(observation))
-        terminated, truncated = False, False
-        print("-----test:{}-----".format(_))
-        total_reward = 0
-        while not( terminated or truncated):
-            action = agent.get_best_action(observation)
-            observation, reward, terminated, truncated, info = env.step(action)
-            observation = list(env.decode(observation))
-            total_reward += reward
-        # game will terminate automatically after 200 steps
-        # print the final score
-        print("score: ", total_reward)
-    env.close()
-
-    env = gym.make("Taxi-v3", render_mode="human")
+    
     # display
     print("-----display-----")
     for _ in range(display_times):
@@ -118,8 +75,6 @@ def main(AGENT_TYPE = "reinforcement",
 
     env.close()
 
-if __name__ == "__main__":
-    main()
 
 def single_test(AGENT_TYPE = "reinforcement",
         test_times = 10,
@@ -128,7 +83,8 @@ def single_test(AGENT_TYPE = "reinforcement",
         l_rate = 0.1,
         d_factor = 0.99,
         expl = 1,
-        mute = False
+        mute = False,
+        agent = None,
         )->list:
     """
     single trin-test loop
@@ -136,17 +92,18 @@ def single_test(AGENT_TYPE = "reinforcement",
     """
     env = gym.make("Taxi-v3")
 
-    if AGENT_TYPE == "random":
-        agent = Agent.RandomAgent(env)
-        train_times = 0 # random agent does not need training
-    elif AGENT_TYPE == "reinforcement":
-        agent = Agent.ReinforcementAgent(env,
-                        learning_rate=l_rate, discount_factor=d_factor, explore=expl)
-    elif AGENT_TYPE == "search":
-        agent = Agent.SearchAgent(env)
-        train_times = 0
-    else:
-        raise Exception("unknown agent type")
+    if agent is None:
+        if AGENT_TYPE == "random":
+            agent = Agent.RandomAgent(env)
+            train_times = 0 # random agent does not need training
+        elif AGENT_TYPE == "reinforcement":
+            agent = Agent.ReinforcementAgent(env,
+                            learning_rate=l_rate, discount_factor=d_factor, explore=expl)
+        elif AGENT_TYPE == "search":
+            agent = Agent.SearchAgent(env) # search agent does not need training
+            train_times = 0
+        else:
+            raise Exception("unknown agent type")
 
     # start training
     if not mute:
@@ -186,7 +143,13 @@ def single_test(AGENT_TYPE = "reinforcement",
             observation, reward, terminated, truncated, info = env.step(action)
             observation = list(env.decode(observation))
             total_reward += reward
+        # game will terminate automatically after 200 steps
+        # print the final score
+        if not mute:
+            print("score: ", total_reward)
         scores.append(total_reward)
     env.close()
     return scores
     
+if __name__ == "__main__":
+    main()
