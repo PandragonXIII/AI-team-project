@@ -3,7 +3,7 @@
    - [ ] 测试不同训练次数下的表现
    - [ ] 可视化
 - [ ] 实现近似Q-Learning
-- [ ] 实现search agent
+- [x] 实现search agent
 - [x] 使创建函数可控制taxi初始位置，乘客与目的地位置
 - [ ] Markov agent
    - [ ] 天气
