@@ -25,7 +25,7 @@ Rewards:
 
 '''
 env = gym.make("Taxi-v3")
-AGENT_TYPE = "reinforcement"
+AGENT_TYPE = "search"
 test_times = 10
 display_times = 10
 FROG_OF_WAR = False
@@ -42,6 +42,9 @@ elif AGENT_TYPE == "reinforcement":
                                      learning_rate=0.1, discount_factor=0.99,
                                      explore=1)
     train_times = 3000
+elif AGENT_TYPE == "search":
+    agent = Agent.SearchAgent(env)
+    train_times = 0
 else:
     raise Exception("unknown agent type")
 

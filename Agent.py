@@ -105,3 +105,27 @@ class ReinforcementAgent(Agent):
                 taxi_row, taxi_col, passenger_location, destination = observation
                 observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
         return np.argmax(self.q_table[observation, :, 0])
+
+
+class SearchAgent(Agent):
+    def __init__(self, env, search_depth = 2):
+        super(SearchAgent, self).__init__(env)
+        self.search_depth = search_depth
+        return
+    
+    def explore(self, observation):
+        raise Exception("search agent does not need training")
+    
+    def get_best_action(self, observation):
+        #if observation is iterable 
+        if not isinstance(observation, int):
+            if None in observation:
+                raise Exception("invisible passenger")
+            else:
+                taxi_row, taxi_col, passenger_location, destination = observation
+                observation = self.env.encode(taxi_row, taxi_col, passenger_location, destination)
+        # do as usual (int)
+        return self.search(observation, self.search_depth)[0]
+    
+    def search(self, observation, depth):
+        pass
