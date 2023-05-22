@@ -12,10 +12,10 @@ def ReLU(x):
 
 def show_performance():
     AGENT_TYPE = "reinforcement"
-    test_times = 50
+    test_times = 100
     FROG_OF_WAR = False
-    train_time_range = [4400,5000,400]
-    l_rate = [0.1, 0.4]
+    train_time_range = [800,4000,400]
+    l_rate = [0.1, 1, 0.05]
     d_factor = 0.9
     expl = 1
 
@@ -24,12 +24,12 @@ def show_performance():
 
     x_data = np.arange(train_time_range[0], train_time_range[1], train_time_range[2])
     x_data = np.append([0], x_data)
-    y_data = np.arange(l_rate[0], l_rate[1], 0.1)
+    y_data = np.arange(l_rate[0], l_rate[1], l_rate[2])
     y_data = np.around(y_data, decimals=2)# 格式化y_data到两位小数
     z_data = []
-    for l_rate in y_data:
+    for learn_rate in y_data:
         agent = main.Agent.ReinforcementAgent(env=env,
-                    learning_rate=l_rate, discount_factor=d_factor, explore=expl)
+                    learning_rate=learn_rate, discount_factor=d_factor, explore=expl)
         for idx in range(len(x_data)-1):
             train_times = x_data[idx+1]-x_data[idx]
             # train_times = x_data[idx+1]
@@ -60,14 +60,14 @@ def show_performance():
 
     return
 
-# show_performance()
+show_performance()
 
 def single_rein_tests():
     AGENT_TYPE = "reinforcement"
     test_times = 50
     FROG_OF_WAR = False
     train_times = 4000
-    l_rate = 0.02
+    l_rate = 0.1
     d_factor = 0.99
     expl = 1
 
@@ -80,7 +80,7 @@ def single_rein_tests():
     print("average score: ", avg_score)
     return
 
-single_rein_tests()
+# single_rein_tests()
 
 def comp_different_agents():
     test_times = 100

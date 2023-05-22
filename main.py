@@ -238,8 +238,7 @@ def single_test(AGENT_TYPE = "reinforcement",
                 #if pass_loc>2: pass_loc=2 # in case potential overflow (chance extremely small)
             testcases.append(env.encode(taxi_row, taxi_col, pass_loc, dest))
     else:
-        testcases=list(range(500))
-        random.shuffle(testcases)
+        testcases = [None] * test_times
     scores = []
     for _ in range(test_times):
         observation, info = env.reset(state = testcases[_])
