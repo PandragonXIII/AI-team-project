@@ -174,7 +174,7 @@ def single_test(AGENT_TYPE = "reinforcement",
         )->list:
     """
     single trin-test loop
-    return: list of scores, len = test_times
+    return: list of scores in testing, len = test_times
     """
     env = gym.make("Taxi-v3")
 
