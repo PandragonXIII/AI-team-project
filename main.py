@@ -49,93 +49,9 @@ PASSENGER_LOC_PROB = np.array([[0.3, 0.2, 0.2, 0.3],
 def main():
     
     #single_test("search",withWeather=True)
-    print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
-    
-    '''env = gym.make("Taxi-v3")
-    AGENT_TYPE = "search"
-    test_times = 10 # 1 - 500
-    display_times = 5
-    FROG_OF_WAR = False
+    #print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
+    single_test("markov_search", FROG_OF_WAR = True, withWeather = True)
 
-    """
-    note that we only have one passenger in each episode for now.
-    车的行为是确定性的, 需要学习的应该是墙的位置和乘客的位置
-    """
-
-    print("Agent Type: ",AGENT_TYPE)
-
-    if AGENT_TYPE == "random":
-        agent = Agent.RandomAgent(env)
-        train_times = 0 # random agent does not need training
-    elif AGENT_TYPE == "reinforcement":
-        agent = Agent.ReinforcementAgent(env,
-                        learning_rate=l_rate, discount_factor=d_factor, explore=expl)
-    elif AGENT_TYPE == "search":
-        agent = Agent.SearchAgent(env) # search agent does not need training
-        train_times = 0
-    else:
-        raise Exception("unknown agent type")
-
-    # start training
-    print("-----training-----")
-    for _ in range(train_times):
-        print(".", end="")
-        observation, info = env.reset()
-        observation = list(env.decode(observation))
-        """
-        ATTENTION!
-        observation = [taxi_row, taxi_col, passenger_location, destination]
-        observation is always list now, 除非是在函数中作为index使用
-        """
-        terminated, truncated = False, False
-        if FROG_OF_WAR:
-            observation = Agent.AddFrogToObs(env, observation)        
-        while not( terminated or truncated):
-            action = agent.explore(observation)
-            old_observation = observation
-            observation, reward, terminated, truncated, info = env.step(action)
-            observation = list(env.decode(observation))
-            agent.update(old_observation, action, observation, reward)
-    print("\n")
-    
-    single_test(AGENT_TYPE, test_times, FROG_OF_WAR, train_times, 
-                l_rate, d_factor, expl, mute = False, agent = agent)
-
-    # start testing
-    testcases=list(range(500))
-    random.shuffle(testcases)
-    weather=random.choice(range(3)) # initial weather: all equally likely
-    for _ in range(test_times):
-        observation, info = env.reset(state = testcases[_])
-        observation = list(env.decode(observation))
-        terminated, truncated = False, False
-        print("-----test:{}-----".format(_))
-        print("WEATHER:", WEATHERS[weather])
-        if FROG_OF_WAR:
-            observation = Agent.AddFrogToObs(env, observation)   
-        total_reward = 0
-        while not( terminated or truncated):
-            action = agent.get_best_action(observation)
-            observation, reward, terminated, truncated, info = env.step(action)
-            observation = list(env.decode(observation))
-            total_reward += reward
-        # game will terminate automatically after 200 steps
-        # print the final score
-        print("score: ", total_reward)
-
-        #change weather
-        r=random.random()
-        nextweather=0
-        s=0.0
-        for prob in WEATHER_TRANSITION[weather]: # get next weather by probabilities
-            s+=prob
-            if r<=s:
-                break
-            nextweather+=1
-        if nextweather>2: nextweather=2 # in case potential overflow (chance extremely small)
-        weather=nextweather
-
-    env.close()'''
 
     '''env = gym.make("Taxi-v3", render_mode="human")
     # display
@@ -147,10 +63,13 @@ def main():
         if FROG_OF_WAR:
             observation = Agent.AddFrogToObs(env, observation)  
         rewards = 0
+        agent.setup()
         for s in range(30):
             action = agent.get_best_action(observation)
             new_observation, reward, terminated, truncated, info = env.step(action)
             new_observation = list(env.decode(new_observation))
+            if FROG_OF_WAR:
+                observation = Agent.AddFrogToObs(env, observation)  
             rewards += reward
             # env.render()
             observation = new_observation
@@ -165,7 +84,7 @@ def single_test(AGENT_TYPE = "reinforcement",
         agent = None,
         mute = False,
         train_times = 5000,
-        test_times = 500,
+        test_times = 10,
         withWeather = False,
         FROG_OF_WAR = False,
         l_rate = 0.1,
@@ -191,6 +110,9 @@ def single_test(AGENT_TYPE = "reinforcement",
         elif AGENT_TYPE == "search":
             agent = Agent.SearchAgent(env) # search agent does not need training
             train_times = 0
+        elif AGENT_TYPE == "markov_search":
+            agent = Agent.MarkovSearchAgent(env)
+            train_times = 0
         else:
             raise Exception("unknown agent type")
 
@@ -209,11 +131,14 @@ def single_test(AGENT_TYPE = "reinforcement",
         terminated, truncated = False, False
         if FROG_OF_WAR:
             observation = Agent.AddFrogToObs(env, observation)        
+        agent.setup()
         while not( terminated or truncated):
             action = agent.explore(observation)
             old_observation = observation
             observation, reward, terminated, truncated, info = env.step(action)
             observation = list(env.decode(observation))
+            if FROG_OF_WAR:
+                observation = Agent.AddFrogToObs(env, observation)  
             agent.update(old_observation, action, observation, reward)
     if not mute:
         print("\n")
@@ -224,7 +149,7 @@ def single_test(AGENT_TYPE = "reinforcement",
         for _ in range(test_times):
             taxi_row = random.choice(range(5))
             taxi_col = random.choice(range(5))
-            dest = random.choice(range(5))
+            dest = random.choice(range(4))
             weather=random.choice(range(3)) # initial weather: all equally likely
             # get pass_loc by probabilities
             r=random.random()
@@ -235,7 +160,7 @@ def single_test(AGENT_TYPE = "reinforcement",
                 if r<=s:
                     break
                 pass_loc+=1
-                #if pass_loc>2: pass_loc=2 # in case potential overflow (chance extremely small)
+                if pass_loc>3: pass_loc=3 # in case potential overflow (chance extremely small)
             testcases.append(env.encode(taxi_row, taxi_col, pass_loc, dest))
     else:
         testcases=list(range(500))
@@ -247,16 +172,22 @@ def single_test(AGENT_TYPE = "reinforcement",
         terminated, truncated = False, False
         if not mute:
             print("-----test:{}-----".format(_))
+            print(observation)
             if withWeather: 
                 print("WEATHER:", WEATHERS[weather])
                 print("passenger loc:",env.locs[observation[2]])
+                print("taxiloc:", observation[0], observation[1])
         if FROG_OF_WAR:
             observation = Agent.AddFrogToObs(env, observation)  
         total_reward = 0
+        agent.setup()
         while not( terminated or truncated):
             action = agent.get_best_action(observation)
+            print("Taking action:",action)
             observation, reward, terminated, truncated, info = env.step(action)
             observation = list(env.decode(observation))
+            if FROG_OF_WAR:
+                observation = Agent.AddFrogToObs(env, observation)  
             total_reward += reward
         # game will terminate automatically after 200 steps
         # print the final score

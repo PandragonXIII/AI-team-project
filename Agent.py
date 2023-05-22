@@ -1,5 +1,5 @@
 import numpy as np
-from queue import Queue
+from queue import Queue, PriorityQueue
 
 def AddFrogToObs(env, observation:list, visible_dis : int = 1)->list:
     """
@@ -24,6 +24,10 @@ class Agent(object):
         self.env = env
         return 
     
+    def setup(self): # one-time operations at start of each case
+        #virtual method
+        pass
+
     def explore(self, observation):
         #virtual method
         pass
@@ -38,6 +42,9 @@ class RandomAgent(Agent):
         super(RandomAgent, self).__init__(env=env)
         return
     
+    def setup(self):
+        pass
+
     def explore(self, observation):
         raise Exception("random agent does not need training")
     
@@ -58,6 +65,9 @@ class ReinforcementAgent(Agent):
         self.q_table[:,:,1] = 1
         return 
     
+    def setup(self):
+        pass
+
     def explore(self, observation:int|list)->int:
         #if observation is a tuple
         if not isinstance(observation, int):
@@ -114,6 +124,11 @@ class SearchAgent(Agent):
         self.search_path_step = -1
         return
     
+    def setup(self):
+        self.search_path = None
+        self.search_path_step = -1
+        return
+
     def explore(self, observation):
         raise Exception("search agent does not need training")
     
@@ -139,6 +154,7 @@ class SearchAgent(Agent):
         if self.search_path is None:
             self.search_path = self.search(observation)
         self.search_path_step += 1
+        print("path step:",self.search_path_step,"searched action:",self.search_path[self.search_path_step])
         return self.search_path[self.search_path_step]
     
     def search(self, observation: int):
@@ -200,6 +216,9 @@ class MarkovAgent(Agent):
         self.q_table[:,:,1] = 1
         return
     
+    def setup(self):
+        pass
+
     def explore(self, observation):
         raise Exception("markov agent does not need training")
     
@@ -239,26 +258,73 @@ class MarkovAgent(Agent):
         raise Exception("markov agent does not need training")
     
 class MarkovSearchAgent(SearchAgent):
+    ''' MarkovSearchAgent can orient itself in heavy fogs.
+    He will also take weather into account, but not for now. '''
     def __init__(self, env):
         super(MarkovSearchAgent, self).__init__(env)
         self.prevlocs=[]
+        self.pathstochoose = PriorityQueue()
+        self.blinded = True
     
+    def setup(self, blinded = True):
+        self.pathstochoose = PriorityQueue()
+        self.blinded = blinded
+
     def explore(self, observation):
-        raise Exception("Markov agent does not need training")
+        raise Exception("markov_search agent does not need training")
     
     def get_best_action(self, observation):
         if not isinstance(observation, int): # observation is tuple
             taxi_row, taxi_col, passenger_location, destination = observation
-            if None in observation:
-                paths=[]
-                for loc in range(4):
-                    paths.append(self.search(self.env.encode(taxi_row, taxi_col, loc, 0)))
-                if not self.prevlocs:
-                    pass
-            else:
-                self.prevlocs.append(passenger_location)
-                super(MarkovSearchAgent, self).get_best_action(observation)
         else:
             taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
-            self.prevlocs.append(passenger_location)
-            super(MarkovSearchAgent, self).get_best_action(observation)
+        print(taxi_row, taxi_col)
+        if passenger_location is None and destination is None: # can't see passenger
+            print("can't see passenger")
+            self.blinded = True
+            if self.search_path is None:
+                self.choosePath(taxi_row, taxi_col)
+                self.search_path_step = -1
+            else:
+                if len(self.search_path) - self.search_path_step <= 2: # near the loc but no passenger there
+                    print("near loc but no passenger there")
+                    self.choosePath(taxi_row, taxi_col)
+                    self.search_path_step = -1
+            self.search_path_step += 1
+            #print(self.search_path[self.search_path_step])
+            return self.search_path[self.search_path_step]
+        else:
+            print("saw passenger at loc",passenger_location)
+            if self.blinded == True:
+                self.search_path = None
+                self.search_path_step = -1
+            self.blinded = False
+            if passenger_location==4 and (taxi_row, taxi_col) == self.env.locs[destination]: #only add pass_loc upon arrival
+                self.prevlocs.append(passenger_location)
+            return super(MarkovSearchAgent, self).get_best_action(observation)
+
+    def choosePath(self, taxi_row, taxi_col):
+        e_arrival=[15.25, 14.75, 15.25, 15.25] # The expected rewards of sending a passenger to destination, starting from passenger's departure
+        # e_arrival[starting_loc] = 20 - \sigma_{loc}{manhattan distances to each loc from starting_loc} / num_locs
+        if not self.prevlocs: #if no info available, choose the current shortest path
+            problist = [.25, .25, .25, .25]
+        else: # choose path according to distance and probability
+            problist = self.calculateProb()
+        if self.pathstochoose.empty():
+            for loc in range(4): # search a path for all 4 locs
+                cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
+                self.pathstochoose.put([(len(cpath) - e_arrival[loc]) * problist[loc], cpath, loc]) #actually calculates expected reward of each loc
+        else:
+            leftlocs=[]
+            while not self.pathstochoose.empty(): #empty and rebuild self.pathstochoose
+                leftlocs.append(self.pathstochoose.get()[2])
+            for loc in leftlocs: # search a path for all 4 locs
+                cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
+                self.pathstochoose.put([(len(cpath) - e_arrival[loc]) * problist[loc], cpath, loc]) #actually calculates expected reward of each loc
+        val, self.search_path, headfor = self.pathstochoose.get()
+        if len(self.search_path)<=2: # near the loc but no passenger there
+            val, self.search_path, headfor = self.pathstochoose.get() # get path to another loc
+        print("Path chosen:",self.search_path,", going for loc",headfor)
+
+    def calculateProb(self):
+        return [.25, .25, .25, .25]
