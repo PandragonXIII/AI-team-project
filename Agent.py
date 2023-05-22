@@ -1,7 +1,7 @@
 import numpy as np
 from queue import Queue
 
-def AddFrogToObs(env, observation:list, visible_dis : int =2)->list:
+def AddFrogToObs(env, observation:list, visible_dis : int = 1)->list:
     """
     passenger is visible only if it is within visible_dis
     return (taxi_row, taxi_col, passenger_location(None), destination(None))
@@ -108,7 +108,7 @@ class ReinforcementAgent(Agent):
 
 
 class SearchAgent(Agent):
-    def __init__(self, env, search_depth = 2):
+    def __init__(self, env):
         super(SearchAgent, self).__init__(env)
         self.search_path = None
         self.search_path_step = -1
@@ -237,3 +237,28 @@ class MarkovAgent(Agent):
     
     def update(self, old_observation, action, observation, reward):
         raise Exception("markov agent does not need training")
+    
+class MarkovSearchAgent(SearchAgent):
+    def __init__(self, env):
+        super(MarkovSearchAgent, self).__init__(env)
+        self.prevlocs=[]
+    
+    def explore(self, observation):
+        raise Exception("Markov agent does not need training")
+    
+    def get_best_action(self, observation):
+        if not isinstance(observation, int): # observation is tuple
+            taxi_row, taxi_col, passenger_location, destination = observation
+            if None in observation:
+                paths=[]
+                for loc in range(4):
+                    paths.append(self.search(self.env.encode(taxi_row, taxi_col, loc, 0)))
+                if not self.prevlocs:
+                    
+            else:
+                self.prevlocs.append(passenger_location)
+                super(MarkovSearchAgent, self).get_best_action(observation)
+        else:
+            taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
+            self.prevlocs.append(passenger_location)
+            super(MarkovSearchAgent, self).get_best_action(observation)
