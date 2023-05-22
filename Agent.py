@@ -254,7 +254,7 @@ class MarkovSearchAgent(SearchAgent):
                 for loc in range(4):
                     paths.append(self.search(self.env.encode(taxi_row, taxi_col, loc, 0)))
                 if not self.prevlocs:
-                    
+                    pass
             else:
                 self.prevlocs.append(passenger_location)
                 super(MarkovSearchAgent, self).get_best_action(observation)

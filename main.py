@@ -48,7 +48,8 @@ PASSENGER_LOC_PROB = np.array([[0.3, 0.2, 0.2, 0.3],
         ):'''
 def main():
     
-    single_test("search",withWeather=True)
+    #single_test("search",withWeather=True)
+    print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
     
     '''env = gym.make("Taxi-v3")
     AGENT_TYPE = "search"
@@ -163,8 +164,8 @@ def main():
 def single_test(AGENT_TYPE = "reinforcement",
         agent = None,
         mute = False,
-        train_times = 3000,
-        test_times = 10,
+        train_times = 5000,
+        test_times = 500,
         withWeather = False,
         FROG_OF_WAR = False,
         l_rate = 0.1,
