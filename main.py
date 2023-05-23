@@ -33,7 +33,7 @@ WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
                                [0.15,0.4, 0.45],
                                [0.3, 0.4, 0.3]]) # 随便设的概率
 
-PASSENGER_LOC_PROB = np.array([[0.3, 0.1, 0.1, 0.5],
+PASSENGER_LOC_PROB = np.array([[0.2, 0.1, 0.1, 0.6],
                                [0.1, 0.4, 0.4, 0.1],
                                [0.7, 0.1, 0.1, 0.1]]) # 随便设的概率
 
@@ -50,7 +50,7 @@ def main():
     
     #single_test("search",withWeather=True)
     #print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
-    scores = single_test("markov_search", FROG_OF_WAR = True, withWeather = True, test_times=1000)
+    scores = single_test("markov_search", FROG_OF_WAR = True, withWeather = True, test_times=5000)
     scores = np.array(scores)
     print("average score:", np.mean(scores))
     print("standard deviation:", np.std(scores))
