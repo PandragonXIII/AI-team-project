@@ -14,9 +14,10 @@ def show_performance():
     AGENT_TYPE = "reinforcement"
     test_times = 100
     FROG_OF_WAR = False
-    train_time_range = [1800,18000,600]
+    train_time_range = [1200,18000,600]
+    # train_time_range = [1200, 4000, 300]
     l_rate = [0.05, 1, 0.05]
-    d_factor = 0.9
+    d_factor = 0.99
     expl = 1
 
     env = gym.make("Taxi-v3")
@@ -36,6 +37,8 @@ def show_performance():
             print("train times: ", x_data[idx+1])
             scores = main.single_test(AGENT_TYPE,agent,True,train_times,test_times)
             avg_score = np.mean(scores)
+            z_data.append(avg_score)
+            avg_score = ReLU(avg_score+10)
             print("score: ", avg_score)
             z_data.append(avg_score)
     # 绘制热力图
@@ -61,7 +64,7 @@ def show_performance():
 
     #store z_data in file
     np.savetxt("z_data.txt", z_data, fmt="%f", delimiter=",")
-    
+
     return
 
 # show_performance()
