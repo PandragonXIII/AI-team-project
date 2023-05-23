@@ -199,19 +199,16 @@ class SearchAgent(Agent):
             ret.append(((taxi_row, taxi_col - 1), 3)) # west
         return ret
     
-
+    
+class MarkovSearchAgent(SearchAgent):
     """
-    Markov Agent can deal with fog of war, in which passenger is invisible
+    MarkovSearchAgent can deal with fog of war, in which passenger is invisible
     use passenger position as evidence variable
         taxi knows there is a hidded variable (weather)
     that influences the passenger position distribution
         it can infer the passenger position distribution, 
     based on its observation of past positions
     """
-    
-class MarkovSearchAgent(SearchAgent):
-    ''' MarkovSearchAgent can orient itself in heavy fogs.
-    He will also take weather into account, but not for now. '''
     def __init__(self, env, WEATHER_TRANSITION, PASSENGER_LOC_PROB):
         super(MarkovSearchAgent, self).__init__(env)
         self.prevloc = None
