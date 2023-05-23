@@ -1,12 +1,12 @@
 ## TODO
-- [ ] 测试Q-learning agent表现
+- [x] 测试Q-learning agent表现
    - [x] 测试不同训练次数下的表现
-   - [ ] 可视化
+   - [x] 可视化
 - [ ] 实现近似Q-Learning
 - [x] 实现search agent
 - [x] 使创建函数可控制taxi初始位置，乘客与目的地位置
 - [ ] Markov agent
-   - [ ] 天气
+   - [x] 天气
    - [x] 战争迷雾
    - [x] 使创建函数可控制taxi初始位置，乘客与目的地位置
 

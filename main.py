@@ -90,12 +90,16 @@ def single_test(AGENT_TYPE = "reinforcement",
         l_rate = 0.1,
         d_factor = 0.99,
         expl = 1,
+        visual = False
         )->list:
     """
     single trin-test loop
     return: list of scores in testing, len = test_times
     """
-    env = gym.make("Taxi-v3")
+    if visual:
+        env = gym.make("Taxi-v3", render_mode="human")
+    else:
+        env = gym.make("Taxi-v3")
 
     if not mute:
         print("Agent Type: ",AGENT_TYPE)
