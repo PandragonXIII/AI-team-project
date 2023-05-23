@@ -286,7 +286,9 @@ class MarkovSearchAgent(SearchAgent):
     def calculateProb(self):
         #return np.array([.25, .25, .25, .25])
         pThisweather_prevlocs = np.dot(self.pLastweather_prevlocs, self.WEATHER_TRANSITION)
-        return np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
+        ret = np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
+        #print(ret)
+        return ret
 
     def filtering(self):
         '''calculate probabilities of weather by Filtering algorithm'''

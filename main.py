@@ -33,7 +33,7 @@ WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
                                [0.15,0.4, 0.45],
                                [0.3, 0.4, 0.3]]) # 随便设的概率
 
-PASSENGER_LOC_PROB = np.array([[0.2, 0.1, 0.1, 0.6],
+PASSENGER_LOC_PROB = np.array([[0.3, 0.1, 0.1, 0.5],
                                [0.1, 0.4, 0.4, 0.1],
                                [0.7, 0.1, 0.1, 0.1]]) # 随便设的概率
 
@@ -50,8 +50,8 @@ def main():
     
     #single_test("search",withWeather=True)
     #print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
-    single_test("markov_search", FROG_OF_WAR = True, withWeather = True)
-
+    #print("Average score:",sum(single_test("search", test_times = 100, FROG_OF_WAR = False, withWeather = True))/100)
+    print("Average score:",sum(single_test("markov_search", test_times = 5000, FROG_OF_WAR = True, withWeather = True))/5000)
 
     '''env = gym.make("Taxi-v3", render_mode="human")
     # display
@@ -148,13 +148,16 @@ def single_test(AGENT_TYPE = "reinforcement",
         print("\n")
 
     # start testing
-    if withWeather:
-        testcases = []
-        for _ in range(test_times):
+    scores = []
+    weather=random.choice(range(3)) # initial weather: all equally likely
+    for _ in range(test_times):
+        if withWeather:
+            #testcases = []
+            #for _ in range(test_times):
             taxi_row = random.choice(range(5))
             taxi_col = random.choice(range(5))
             dest = random.choice(range(4))
-            weather=random.choice(range(3)) # initial weather: all equally likely
+            #weather=random.choice(range(3)) # initial weather: all equally likely
             # get pass_loc by probabilities
             r=random.random()
             pass_loc=0
@@ -165,12 +168,10 @@ def single_test(AGENT_TYPE = "reinforcement",
                     break
                 pass_loc+=1
                 if pass_loc>3: pass_loc=3 # in case potential overflow (chance extremely small)
-            testcases.append(env.encode(taxi_row, taxi_col, pass_loc, dest))
-    else:
-        testcases = [None] * test_times
-    scores = []
-    for _ in range(test_times):
-        observation, info = env.reset(state = testcases[_])
+                #testcases.append(env.encode(taxi_row, taxi_col, pass_loc, dest))
+            observation, info = env.reset(state = env.encode(taxi_row, taxi_col, pass_loc, dest))
+        else:
+            observation, info = env.reset()
         observation = list(env.decode(observation))
         terminated, truncated = False, False
         if not mute:
