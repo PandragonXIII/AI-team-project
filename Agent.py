@@ -208,6 +208,7 @@ class MarkovSearchAgent(SearchAgent):
     that influences the passenger position distribution
         it can infer the passenger position distribution, 
     based on its observation of past positions
+    It goes straight towards the most likely passenger location, and if no passenger there, goes straight for the next, etc.
     """
     def __init__(self, env, WEATHER_TRANSITION, PASSENGER_LOC_PROB):
         super(MarkovSearchAgent, self).__init__(env)
@@ -275,7 +276,7 @@ class MarkovSearchAgent(SearchAgent):
             leftlocs=[]
             while not self.pathstochoose.empty(): #empty and rebuild self.pathstochoose
                 leftlocs.append(self.pathstochoose.get()[2])
-            for loc in leftlocs: # search a path for all 4 locs
+            for loc in leftlocs: # search a path for all #4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
                 self.pathstochoose.put([(len(cpath) - e_arrival[loc]) * problist[loc], cpath, loc]) #actually calculates expected reward of each loc
         val, self.search_path, headfor = self.pathstochoose.get()
@@ -284,9 +285,11 @@ class MarkovSearchAgent(SearchAgent):
         #print("Path chosen:",self.search_path,", going for loc",headfor)
 
     def calculateProb(self):
-        # return np.array([.25, .25, .25, .25])
+        #return np.array([.25, .25, .25, .25])
         pThisweather_prevlocs = np.dot(self.pLastweather_prevlocs, self.WEATHER_TRANSITION)
-        return np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
+        ret = np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
+        #print(ret)
+        return ret
 
     def filtering(self):
         '''calculate probabilities of weather by Filtering algorithm'''
