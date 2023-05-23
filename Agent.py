@@ -284,7 +284,7 @@ class MarkovSearchAgent(SearchAgent):
         #print("Path chosen:",self.search_path,", going for loc",headfor)
 
     def calculateProb(self):
-        #return np.array([.25, .25, .25, .25])
+        # return np.array([.25, .25, .25, .25])
         pThisweather_prevlocs = np.dot(self.pLastweather_prevlocs, self.WEATHER_TRANSITION)
         return np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
 
