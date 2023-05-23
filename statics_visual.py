@@ -225,9 +225,9 @@ def markov_agent_test():
     return
 
 if True:
-    # single_visualize()
+    single_visualize()
     # comp_different_agents()
     # single_rein_tests()
     # show_performance()
     # show_data_from_file()
-    markov_agent_test()
+    # markov_agent_test()
