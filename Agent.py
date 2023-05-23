@@ -154,7 +154,7 @@ class SearchAgent(Agent):
         if self.search_path is None:
             self.search_path = self.search(observation)
         self.search_path_step += 1
-        print("path step:",self.search_path_step,"searched action:",self.search_path[self.search_path_step])
+        #print("path step:",self.search_path_step,"searched action:",self.search_path[self.search_path_step])
         return self.search_path[self.search_path_step]
     
     def search(self, observation: int):
@@ -260,15 +260,20 @@ class MarkovAgent(Agent):
 class MarkovSearchAgent(SearchAgent):
     ''' MarkovSearchAgent can orient itself in heavy fogs.
     He will also take weather into account, but not for now. '''
-    def __init__(self, env):
+    def __init__(self, env, WEATHER_TRANSITION, PASSENGER_LOC_PROB):
         super(MarkovSearchAgent, self).__init__(env)
-        self.prevlocs=[]
+        self.prevloc = None
         self.pathstochoose = PriorityQueue()
         self.blinded = True
+        self.WEATHER_TRANSITION = WEATHER_TRANSITION
+        self.PASSENGER_LOC_PROB = PASSENGER_LOC_PROB
+        self.pLastweather_prevlocs = np.array([1/3,1/3,1/3])
+        self.pThisweather_locs = np.full((4,3),1/3)
     
-    def setup(self, blinded = True):
+    def setup(self):
         self.pathstochoose = PriorityQueue()
-        self.blinded = blinded
+        self.blinded = True
+        self.filtering()
 
     def explore(self, observation):
         raise Exception("markov_search agent does not need training")
@@ -278,36 +283,39 @@ class MarkovSearchAgent(SearchAgent):
             taxi_row, taxi_col, passenger_location, destination = observation
         else:
             taxi_row, taxi_col, passenger_location, destination = self.env.decode(observation)
-        print(taxi_row, taxi_col)
-        if passenger_location is None and destination is None: # can't see passenger
-            print("can't see passenger")
+        #print(taxi_row, taxi_col)
+        if passenger_location is None: # can't see passenger
+            #print("can't see passenger")
             self.blinded = True
             if self.search_path is None:
                 self.choosePath(taxi_row, taxi_col)
                 self.search_path_step = -1
             else:
                 if len(self.search_path) - self.search_path_step <= 2: # near the loc but no passenger there
-                    print("near loc but no passenger there")
+                    #print("near loc but no passenger there")
                     self.choosePath(taxi_row, taxi_col)
                     self.search_path_step = -1
             self.search_path_step += 1
             #print(self.search_path[self.search_path_step])
             return self.search_path[self.search_path_step]
         else:
-            print("saw passenger at loc",passenger_location)
+            #print("saw passenger at loc",passenger_location)
             if self.blinded == True:
                 self.search_path = None
                 self.search_path_step = -1
             self.blinded = False
-            if passenger_location==4 and (taxi_row, taxi_col) == self.env.locs[destination]: #only add pass_loc upon arrival
-                self.prevlocs.append(passenger_location)
+            if passenger_location < 4:
+                self.prevloc = passenger_location
+            elif (taxi_row, taxi_col) == self.env.locs[destination]: # crystallize upon arrival
+                self.pLastweather_prevlocs = self.pThisweather_locs[self.prevloc]
+                print("Today's weather probabilities:",self.pLastweather_prevlocs)
             return super(MarkovSearchAgent, self).get_best_action(observation)
 
     def choosePath(self, taxi_row, taxi_col):
         e_arrival=[15.25, 14.75, 15.25, 15.25] # The expected rewards of sending a passenger to destination, starting from passenger's departure
         # e_arrival[starting_loc] = 20 - \sigma_{loc}{manhattan distances to each loc from starting_loc} / num_locs
-        if not self.prevlocs: #if no info available, choose the current shortest path
-            problist = [.25, .25, .25, .25]
+        if not self.prevloc: #if no info available, choose the current shortest path
+            problist = np.array([.25, .25, .25, .25])
         else: # choose path according to distance and probability
             problist = self.calculateProb()
         if self.pathstochoose.empty():
@@ -324,7 +332,16 @@ class MarkovSearchAgent(SearchAgent):
         val, self.search_path, headfor = self.pathstochoose.get()
         if len(self.search_path)<=2: # near the loc but no passenger there
             val, self.search_path, headfor = self.pathstochoose.get() # get path to another loc
-        print("Path chosen:",self.search_path,", going for loc",headfor)
+        #print("Path chosen:",self.search_path,", going for loc",headfor)
 
     def calculateProb(self):
-        return [.25, .25, .25, .25]
+        #return np.array([.25, .25, .25, .25])
+        pThisweather_prevlocs = np.dot(self.pLastweather_prevlocs, self.WEATHER_TRANSITION)
+        return np.dot(pThisweather_prevlocs, self.PASSENGER_LOC_PROB)
+
+    def filtering(self):
+        '''calculate probabilities of weather by Filtering algorithm'''
+        pThisweather_prevlocs = np.dot(self.pLastweather_prevlocs, self.WEATHER_TRANSITION)
+        for i in range(4):
+            self.pThisweather_locs[i] = self.PASSENGER_LOC_PROB[:,i] * pThisweather_prevlocs
+            self.pThisweather_locs[i] /= np.sum(self.pThisweather_locs[i]) # normalize 

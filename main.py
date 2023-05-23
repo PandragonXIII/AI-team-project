@@ -33,8 +33,8 @@ WEATHER_TRANSITION = np.array([[0.7, 0.2, 0.1],
                                [0.15,0.4, 0.45],
                                [0.3, 0.4, 0.3]]) # 随便设的概率
 
-PASSENGER_LOC_PROB = np.array([[0.3, 0.2, 0.2, 0.3],
-                               [0.2, 0.3, 0.3, 0.2],
+PASSENGER_LOC_PROB = np.array([[0.2, 0.1, 0.1, 0.6],
+                               [0.1, 0.4, 0.4, 0.1],
                                [0.7, 0.1, 0.1, 0.1]]) # 随便设的概率
 
 '''def main(AGENT_TYPE = "reinforcement",
@@ -111,7 +111,7 @@ def single_test(AGENT_TYPE = "reinforcement",
             agent = Agent.SearchAgent(env) # search agent does not need training
             train_times = 0
         elif AGENT_TYPE == "markov_search":
-            agent = Agent.MarkovSearchAgent(env)
+            agent = Agent.MarkovSearchAgent(env, WEATHER_TRANSITION, PASSENGER_LOC_PROB)
             train_times = 0
         else:
             raise Exception("unknown agent type")
@@ -182,7 +182,7 @@ def single_test(AGENT_TYPE = "reinforcement",
         agent.setup()
         while not( terminated or truncated):
             action = agent.get_best_action(observation)
-            print("Taking action:",action)
+            #print("Taking action:",action)
             observation, reward, terminated, truncated, info = env.step(action)
             observation = list(env.decode(observation))
             if FROG_OF_WAR:
