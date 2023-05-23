@@ -50,8 +50,11 @@ def main():
     
     #single_test("search",withWeather=True)
     #print("Negative scores",len([a for a in single_test("reinforcement") if a<0]),"/ 500")
-    #print("Average score:",sum(single_test("search", test_times = 100, FROG_OF_WAR = False, withWeather = True))/100)
-    print("Average score:",sum(single_test("markov_search", test_times = 5000, FROG_OF_WAR = True, withWeather = True))/5000)
+    scores = single_test("markov_search", FROG_OF_WAR = True, withWeather = True, test_times=1000)
+    scores = np.array(scores)
+    print("average score:", np.mean(scores))
+    print("standard deviation:", np.std(scores))
+
 
     '''env = gym.make("Taxi-v3", render_mode="human")
     # display
