@@ -34,6 +34,7 @@
 \usepackage{xcolor}         % colors
 
 \usepackage{CJKutf8}
+\usepackage{graphicx}
 
 
 \title{CS81 Final Project Report - taxi game}
@@ -92,6 +93,15 @@
   没写
 \end{abstract}
 
+
+\section{问题描述}
+在一个$M\times N$ 的地图中，每个格子与相邻的四个格子连通，如果两个格子之间存在墙壁，则两者不再连通。
+Agent每步可以从一个格子移动到与之连通的另一个格子，或者进行载客/下客操作。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=6cm,height=4cm]{images/map.png}
+  \caption{A possible map.}
+\end{figure}
 
 \section{Submission of papers to NeurIPS 2023}
 
