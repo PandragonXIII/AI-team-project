@@ -144,6 +144,16 @@ $$
 其中， $N(s,a)$ 对应在 $s$状态下选择$a$行动的次数；explore\_constant 为超参数，默认为1。
 \subsubsection{学习过程}
 在本游戏中，如果agent成功将乘客送达目的地，其得分一般为正数。
+并且由于存在200次的时限，agent的得分区间为[-2000,20)。在训练过程中可以发现，一个常见的失败情况是
+agent一直向着某个方向移动，并在-200分时退出本局。将不同学习率下agent训练不同次数的得分情况
+可视化后得到下图。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=6cm,height=8cm]{images/small_map_origin.png}
+  \caption{scores under different learning rate and training times.}
+\end{figure}
+从图中可以看出：随着学习率下降，达到正得分并收敛所需的训练次数逐渐减少。
+然而由于
 
 \subsubsection{表现对比}
 
