@@ -127,18 +127,33 @@ Agent每步可以从一个格子移动到与之连通的另一个格子，或者
 
 \subsubsection{天气} 
 
-\section{模型介绍}
+\section{模型与表现}
 
 \subsection{Search Agent}
 
 \subsection{Reinforcement Agent 在不同大小地图的表现}
+\subsubsection{简介}
+在这部分中我们采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
+算法上采用observation state-action pair作为Q table的索引。相比可以画在地图上的Q Table
+，这样会形成一个多维的Q Table，更类似吃豆人的例子。 
+
+其次，我们采用了exploration function的方式来鼓励探索。更新Q value的公式如下: 
+$$
+Q(s,a) = \alpha R(s,a,s')+\gamma max_{a'}Q(s',a') + \frac{explore\_constant}{N(s,a)}
+$$
+其中， $N(s,a)$ 对应在 $s$状态下选择$a$行动的次数；explore\_constant 为超参数，默认为1。
+\subsubsection{学习过程}
+在本游戏中，如果agent成功将乘客送达目的地，其得分一般为正数。
+
+\subsubsection{表现对比}
 
 \subsection{Markov-Search Agent 在附加规则下的表现}
 
 \section{主要贡献}
-齐修远：基础环境配置；迷雾系统；强化学习Agent；表现可视化
-
 郭子杨：Search Agent；天气系统；Markov-Search Agent 
+
+齐修远：基础环境配置；迷雾系统；强化学习Agent；表现可视化 
+
 
 项目GitHub仓库：\url{https://github.com/PandragonXIII/AI-team-project} 
 
