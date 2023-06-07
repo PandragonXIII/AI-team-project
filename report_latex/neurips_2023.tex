@@ -66,7 +66,7 @@
   \texttt{qixy1@shanghaitech.edu.cn} \\
   \And
   Ziyang Guo \\
-  \texttt{???@shanghaitech.edu.cn} \\
+  \texttt{guozy@shanghaitech.edu.cn} \\
   % \And
   % Coauthor \\
   % Affiliation \\
@@ -93,53 +93,96 @@
   % spacing (leading) of 11~points.  The word \textbf{Abstract} must be centered,
   % bold, and in point size 12. Two line spaces precede the abstract. The abstract
   % must be limited to one paragraph.
-  没写
+  本项目为使用人工智能完成一个出租车游戏，着重研究了三种出租车代理程序：Search Agent, Reinforcement Agent 和 Markov-Search Agent, 
+  并对它们的不同表现进行比较。
+  Search Agent采用广度优先搜索算法；Reinforcement Agent采用强化学习算法；Markov-Search Agent 使用隐马尔科夫模型进行决策。
+  结果说明，Search Agent 一定得到最优解；在一定的训练之后Reinforcement Agent也可以得到最优解；而在加入了迷雾和天气系统的游戏中，Markov-Search Agent 有着不错的表现。
 \end{abstract}
 
 
 \section{问题描述}
-在一个$M\times N$ 的地图中，每个格子与相邻的四个格子连通，如果两个格子之间存在墙壁，则两者不再连通。
-Agent每步可以从一个格子移动到与之连通的另一个格子，或者进行载客/下客操作。 
+在一个$M\times N$ 的地图中，每个格子与相邻的四个格子连通，如果相邻的两个格子之间存在墙壁，则两者不再连通。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=6cm,height=4cm]{images/map.png}
   \caption{A possible map.}
 \end{figure}
-当乘客与出租车在同一个格子且乘客不在车内时进行上车操作会使乘客转移到车中。 
+每一轮有1名乘客和1个乘客想前往的目的地。
 
-​当乘客在车内时进行下车操作会使乘客转移到车所在的地块。 
+​地图中一共有4个乘车点，每局游戏开始时乘客和目的地会随机刷新在不同的乘车点。出租车会随机出生在地图中。 
 
-​地图中有四个出生点，游戏开始时乘客和目的地会随机刷新在不同的出生点。出租车会随机出生在地图中。 
+出租车每步可以进行上/下/左/右移动（从一个格子移动到与之连通的另一个格子），或者进行载客/下客操作。 
+
+当出租车位于乘客所在的乘车点，且乘客不在车内时，进行上车操作会使乘客转移到车中。否则操作无效。 
+
+​当出租车位于目的地，且乘客在车内时，进行下车操作会使乘客转移到车所在的地块，并且本局游戏结束。否则操作无效。 
 
 \paragraph{\textbf{得分规则}}
 \begin{itemize}
-\item 非法的上下车：-10 （与乘客不在同一个格子的情况下上车、车上无乘客或不在目的地时下车） 
+\item 无效的上下车：-10 （与乘客不在同一个格子的情况下上车、车上无乘客或不在目的地时下车） 
 
 \item 将乘客送达目的地：+20（乘客在车中、车在目的地时进行下车操作） 
 
 \item 其他：-1 （移动、合法上下车） 
 \end{itemize}
-当乘客抵达目的地后本局游戏结束，Agent 的目的是使得分最大化。 
+Agent 的目的是使得分最大化，即以尽量少的步数将乘客送达目的地。 
+
+若出租车未能在200步内将乘客送达目的地，则本局游戏将强制结束，以最终得分为本局得分。
 
 \subsection{附加规则}
-为了增加难度与不确定性、以及添加前后局之间的关联性，我们添加了以下的附加规则。
+为了增加难度与不确定性、以及添加前后局之间的关联性，对于部分游戏局，我们添加了以下的附加规则：
 
 \subsubsection{迷雾}
-在添加了迷雾的游戏中，存在一个额外的参数$V$ ，只有当乘客与出租车的曼哈顿距离小于V时，出租车才能收到乘客的位置信息，否则出租车无法知道乘客的位置。 
+在添加了迷雾的游戏中，存在一个额外的参数$V$ ，只有当乘客与出租车的横、纵距离均小于$V$时，出租车才能收到乘客的位置信息，否则出租车无法知道乘客的位置。 
 
 \subsubsection{天气} 
+在连续的多局游戏中，存在一个参数“天气”$W$。
+共有3种天气：晴天$(W=0)$、阴天$(W=1)$、雨天$(W=2)$。
 
+每局天气固定。
+本局的天气决定下一局各天气出现的概率，
+同时决定本局中乘客在各乘车点的出现概率。
+
+暂定天气转移矩阵$T$如下：
+$$T=P(W_{t+1}|W_t)=\begin{pmatrix}
+  0.7 & 0.2 & 0.1 \\
+  0.15 & 0.4 & 0.45 \\
+  0.3 & 0.4 & 0.3
+\end{pmatrix}$$
+其中$W_t$为第$t$局时的天气变量。设$W_t$的取值为$w_t$，则$(T)_{w_t,w_{t+1}}=P(w_{t+1}|w_t)$，即$T$中第$w_t$行第$w_{t+1}$列元素为本局天气为$w_t$的情况下下一局天气为$w_{t+1}$的概率。
+
+暂定天气影响乘客概率的矩阵如下：
+$$P(L_t|W_t)=\begin{pmatrix}
+  0.2 & 0.1 & 0.1 & 0.6 \\
+  0.1&0.4&0.4&0.1\\
+  0.7&0.1&0.1&0.1
+\end{pmatrix}$$
+其中$L_t$为第$t$局中的乘客所在乘车点变量，即乘客出现在了4个乘车点中的哪一个。
+
+暂定初始天气分布$P(W_0)$如下：
+$$P(W_0)=\begin{pmatrix}
+  \frac{1}{3} & \frac{1}{3} & \frac{1}{3}
+\end{pmatrix}$$
+即第0局中3种天气的出现概率均等。
+
+%\section{模型与表现}
 \section{使用的模型}
+本项目着重研究了三种游戏 Agent 模型：Search Agent, Reinforcement Agent 和 Markov-Search Agent.
 
 \subsection{Search Agent}
+Search Agent 在拥有完整信息的地图中活动（Agent 得知乘客与目的地的确切位置）。
+
+Search Agent 采用广度优先搜索算法 (BFS) ，先搜索一条通往乘客位置的路径，沿路径前往上车点进行上车操作后，再搜索一条通往目的地的路径，前往目的地让乘客下车。
 
 \subsection{Reinforcement Agent}
-在强化学习的部分中我们采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
+同 Search Agent 一样， Reinforcement Agent 也得知乘客与目的地位置。
+
+Reinforcement Agent 采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
 算法上采用observation state-action pair作为Q table的索引。相比可以画在地图上的Q Table
 ，这样会形成一个多维的Q Table，更类似吃豆人的例子。 
 
-其次，我们采用了exploration function的方式来鼓励探索。更新Q value的公式如下: 
+其次，采用exploration function的方式来鼓励探索。更新Q value的公式如下: 
 $$
 Q(s,a) = \alpha R(s,a,s')+\gamma max_{a'}Q(s',a') + \frac{explore\_constant}{N(s,a)}
 $$
@@ -149,9 +192,29 @@ $$
 时需要较多时间重新训练模型，函数中支持传入已经
 
 \subsection{Markov-Search Agent}
+在附加规则下，天气系统可看作是一个隐马尔科夫模型 (HMM)，能以贝叶斯网络的形式表示为下图：
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=9cm,height=3cm]{images/1.png}
+  \caption{Weather HMM}
+\end{figure}
+Markov-Search Agent 可基于已知信息，计算出当前游戏局乘客在各乘车点的出现概率，据此决定出租车的行动。具体算法如下：
+\begin{enumerate}
+  \item 使用 Filtering Algorithm 计算当前各天气的概率：
+$$P(W_t|l_{0:t})=\alpha P(l_t|W_t)*(P(W_{t-1}|l_{0:t-1})P(W_t|W_{t-1}))$$
+其中$*$号表示矩阵对应元素相乘，不显示符号的乘法表示矩阵乘法。$\alpha$为归一化系数，使得结果向量中的各元素和为1. 
+
+$l_t$表示$L_t$的取值。$l_{0:t}$等同于$l_0,l_1,\dots,l_t$.
+  \item 计算当前乘客出现在各乘车点的概率：
+$$P(L_t|l_{0:t-1})=P(W_{t-1}|l_{0:t-1})P(W_t|W_{t-1})P(L_t|W_t)$$
+  \item 根据概率计算每个位置的期望得分
+  \item 搜索一条通往期望最高的乘车点的路径；如果到了附近看到没有乘客，则搜索通往期望第二高的乘车点的路径，如此以往
+\end{enumerate}
 
 \section{表现评估}
 \subsection{Search Agent}
+由于 BFS 算法性质保证了搜索结果为最短路径，且载客、送客两步均不可跳过，可知 Search Agent 必然能得到最优解。因此 Search Agent 可作为另外两种 Agent 的表现参考。
 
 \subsection{Reinforcement Agent}
 \subsubsection{学习过程}
@@ -221,7 +284,7 @@ $$
 且随学习率提高收敛所需训练次数逐渐降低，并在0.5左右达到最低值。
 \begin{figure}[htbp]
   \centering
-  \includegraphics[scale = 0.15]{images/big_map_relu.png}
+  \includegraphics[scale = 0.1]{images/big_map_relu.png}
   \caption{scores on big map after ReLU.}
 \end{figure} 
 

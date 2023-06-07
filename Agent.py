@@ -217,6 +217,10 @@ class MarkovSearchAgent(SearchAgent):
         self.blinded = True
         self.WEATHER_TRANSITION = WEATHER_TRANSITION
         self.PASSENGER_LOC_PROB = PASSENGER_LOC_PROB
+        self.lenbetweenlocs=[[0,8,4,7],
+                            [8,0,8,5],
+                            [4,8,0,7],
+                            [7,5,7,0]] #lengths of paths between stations
         self.pLastweather_prevlocs = np.array([1/3,1/3,1/3])
         self.pThisweather_locs = np.full((4,3),1/3)
     
@@ -268,21 +272,38 @@ class MarkovSearchAgent(SearchAgent):
             problist = np.array([.25, .25, .25, .25])
         else: # choose path according to distance and probability
             problist = self.calculateProb()
+        #print("passenger probs:",problist)
         if self.pathstochoose.empty():
             for loc in range(4): # search a path for all 4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
-                self.pathstochoose.put([(len(cpath) - e_arrival[loc]) * problist[loc], cpath, loc]) #actually calculates expected reward of each loc
+                self.pathstochoose.put([-self._calculateExp(len(cpath),loc,range(4),problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
         else:
             leftlocs=[]
             while not self.pathstochoose.empty(): #empty and rebuild self.pathstochoose
                 leftlocs.append(self.pathstochoose.get()[2])
             for loc in leftlocs: # search a path for all #4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
-                self.pathstochoose.put([(len(cpath) - e_arrival[loc]) * problist[loc], cpath, loc]) #actually calculates expected reward of each loc
+                self.pathstochoose.put([-self._calculateExp(len(cpath),loc,leftlocs,problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
         val, self.search_path, headfor = self.pathstochoose.get()
         if len(self.search_path)<=2: # near the loc but no passenger there
             val, self.search_path, headfor = self.pathstochoose.get() # get path to another loc
         #print("Path chosen:",self.search_path,", going for loc",headfor)
+        print("going for loc",headfor)
+
+    def _calculateExp(self,lenpath,loc,loclist,problist,e_arrival):
+        loclist=list(loclist)
+        if len(loclist)<=1: return e_arrival[loc] - lenpath #only possibility
+        ret = problist[loc] * (e_arrival[loc] - lenpath) #considering case if pass at loc
+        newproblist=problist.copy() #considering case if pass not at loc: renew problist
+        newproblist[loc]=0
+        newproblist /= np.sum(newproblist)
+        newloclist=loclist.copy()#renew loclist
+        newloclist.remove(loc)
+        en=[-200,-200,-200,-200] #expected rewards of other locs given passenger not at this loc
+        for l in newloclist:
+            en[l] = self._calculateExp(self.lenbetweenlocs[loc][l], l, newloclist, newproblist, e_arrival) - self.lenbetweenlocs[loc][l]
+        ret += (1-problist[loc]) * np.max(np.array(en))
+        return ret
 
     def calculateProb(self):
         #return np.array([.25, .25, .25, .25])
