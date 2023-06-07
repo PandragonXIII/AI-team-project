@@ -35,7 +35,9 @@
 
 \usepackage{CJKutf8}
 \usepackage{graphicx}
+\usepackage{subfigure}
 \usepackage{amsmath}
+\usepackage{listings}
 
 
 \title{基于强化学习和马尔可夫模型的出租车代理}
@@ -94,7 +96,7 @@
   本项目为使用人工智能完成一个出租车游戏，着重研究了三种出租车代理程序：Search Agent, Reinforcement Agent 和 Markov-Search Agent, 
   并对它们的不同表现进行比较。
   Search Agent采用广度优先搜索算法；Reinforcement Agent采用强化学习算法；Markov-Search Agent 使用隐马尔科夫模型进行决策。
-  结果说明，Search Agent 一定得到最优解；（你来写）；而在加入了迷雾和天气系统的游戏中，Markov-Search Agent 有着较好的表现。
+  结果说明，Search Agent 一定得到最优解；（你来写）；而在加入了迷雾和天气系统的游戏中，Markov-Search Agent 有着不错的表现。
 \end{abstract}
 
 
@@ -164,20 +166,16 @@ $$P(W_0)=\begin{pmatrix}
 \end{pmatrix}$$
 即第0局中3种天气的出现概率均等。
 
-\section{模型与表现}
+%\section{模型与表现}
+\section{使用的模型}
 本项目着重研究了三种游戏 Agent 模型：Search Agent, Reinforcement Agent 和 Markov-Search Agent.
 
 \subsection{Search Agent}
-\subsubsection{简介}
 Search Agent 在拥有完整信息的地图中活动（Agent 得知乘客与目的地的确切位置）。
 
 Search Agent 采用广度优先搜索算法 (BFS) ，先搜索一条通往乘客位置的路径，沿路径前往上车点进行上车操作后，再搜索一条通往目的地的路径，前往目的地让乘客下车。
 
-\subsubsection{表现}
-由于 BFS 算法性质保证了搜索结果为最短路径，且载客、送客两步均不可跳过，可知 Search Agent 必然能得到最优解。因此 Search Agent 可作为另外两种 Agent 的表现参考。
-
-\subsection{Reinforcement Agent 在不同大小地图的表现}
-\subsubsection{简介}
+\subsection{Reinforcement Agent}
 同 Search Agent 一样， Reinforcement Agent 也得知乘客与目的地位置。
 
 Reinforcement Agent 采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
@@ -189,24 +187,12 @@ $$
 Q(s,a) = \alpha R(s,a,s')+\gamma max_{a'}Q(s',a') + \frac{explore\_constant}{N(s,a)}
 $$
 其中， $N(s,a)$ 对应在 $s$状态下选择$a$行动的次数；explore\_constant 为超参数，默认为1。
-\subsubsection{学习过程}
-在本游戏中，如果agent成功将乘客送达目的地，其得分一般为正数。
-并且由于存在200次的时限，agent的得分区间为[-2000,20)。在训练过程中可以发现，一个常见的失败情况是
-agent一直向着某个方向移动，并在-200分时退出本局。将不同学习率下agent训练不同次数的得分情况
-可视化后得到下图。
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=6cm,height=8cm]{images/small_map_origin.png}
-  \caption{scores under different learning rate and training times.}
-\end{figure}
-从图中可以看出：随着学习率下降，达到正得分并收敛所需的训练次数逐渐减少。
-然而由于
 
-\subsubsection{表现对比}
+另外，我们在编写对应的函数时还考虑了训练时间的问题：为了避免在学习次数或其他参数改变
+时需要较多时间重新训练模型，函数中支持传入已经
 
-\subsection{Markov-Search Agent 在附加规则下的表现}
-\subsubsection{简介}
-在附加规则下，天气系统可看作是一个隐马尔科夫模型 (HMM)，能以贝叶斯网络的形式表现为下图：
+\subsection{Markov-Search Agent}
+在附加规则下，天气系统可看作是一个隐马尔科夫模型 (HMM)，能以贝叶斯网络的形式表示为下图：
 
 \begin{figure}[htbp]
   \centering
@@ -225,7 +211,85 @@ $$P(L_t|l_{0:t-1})=P(W_{t-1}|l_{0:t-1})P(W_t|W_{t-1})P(L_t|W_t)$$
   \item 根据概率计算每个位置的期望得分
   \item 搜索一条通往期望最高的乘车点的路径；如果到了附近看到没有乘客，则搜索通往期望第二高的乘车点的路径，如此以往
 \end{enumerate}
-\subsubsection{表现与对比}
+
+\section{表现评估}
+\subsection{Search Agent}
+由于 BFS 算法性质保证了搜索结果为最短路径，且载客、送客两步均不可跳过，可知 Search Agent 必然能得到最优解。因此 Search Agent 可作为另外两种 Agent 的表现参考。
+
+\subsection{Reinforcement Agent}
+\subsubsection{学习过程}
+在本游戏中，如果agent成功将乘客送达目的地，其得分一般为正数。
+并且由于存在200次的时限，agent的得分区间为[-2000,20)。在训练过程中可以发现，一个常见的失败情况是
+agent一直向着某个方向移动，并在-200分时退出本局。将不同学习率下agent训练不同次数的得分情况
+可视化后得到下图。 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=4.8cm,height=6.4cm]{images/small_map_origin.png}
+  \caption{scores under different learning rate and training times.}
+\end{figure} 
+
+从图中可以看出：随着学习率下降，达到正得分并收敛所需的训练次数逐渐减少。
+然而由于负数部分绝对值较大，较难判断完成游戏时采取的策略的好坏（即正分数的相对大小）
+因此采用
+$$
+f(x) = \left\{
+\begin{matrix}
+0 & x\leq 0 \\
+x & x>0\\ 
+\end{matrix}
+\right.
+$$ 
+
+函数来对得分进行处理，结果如下图左。收敛后的得分基本在8分左右，观察学习率为0.4的损失曲线
+得知在约1600次训练后loss基本稳定为零，即收敛到了最优解。
+\begin{figure}[htbp]
+  \centering
+  \subfigure[scores under relu function.]{
+  \includegraphics[scale = 0.15]{images/full_small_relu.png} \label{ab}
+  }
+  \subfigure[loss figure with error]{
+  \includegraphics[scale = 0.5]{images/loss_bar.png} \label{cd}
+  }
+  \caption{scores and loss}
+\end{figure} 
+
+\subsubsection{表现对比}
+在本游戏中，由于Search Agent一定会得到最优解，因此损失曲线同时也是其他Agent
+与Search Agent的得分差距。学习率>0.2 时Reinforcement Agent 基本都可以在2000次迭代后收敛
+并达到与Search Agent相同的最优效果。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale = 0.2]{images/comp_rein_search.png}
+  \caption{scores under different learning rate and training times.}
+\end{figure} 
+
+另外，在未收敛的情况下，很大一部分得分为-200；也有少部分情况有更低分。随着训练次数增加
+得分一般会呈现先快后慢的增长趋势。 
+
+此外，我们还对游戏环境进行了一定的改动，来测试在更大的地图下该AI的表现。
+大地图的字符串如下
+\begin{lstlisting}[language = C]
+"+-----------------------+",
+"| |R: : : : | : : | : : |",
+"| | : | : : | : :G| : : |",
+"| : : | | : : : : | : : |",
+"| : : | | | : : : | : : |",
+"| : : : | | | : : |B| : |",
+"| : : : | : | : : : | | |",
+"| : : :Y| : | : : : : : |",
+"+-----------------------+",
+\end{lstlisting}
+其中，| 代表墙壁; : 代表可以通过; R,G,B,Y代表四个上下车点。在经过测试后发现
+其学习过程的得分曲线与小地图中基本一致：都是类似反比函数的形式；
+且随学习率提高收敛所需训练次数逐渐降低，并在0.5左右达到最低值。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale = 0.2]{images/big_map_relu.png}
+  \caption{scores on big map after ReLU.}
+\end{figure} 
+
+
+\subsection{Markov-Search Agent 在附加规则下的表现}
 
 \section{主要贡献}
 郭子杨：Search Agent；天气系统；Markov-Search Agent 
