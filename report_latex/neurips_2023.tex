@@ -35,6 +35,8 @@
 
 \usepackage{CJKutf8}
 \usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsmath}
 
 
 \title{基于强化学习和马尔可夫模型的出租车代理}
@@ -127,13 +129,12 @@ Agent每步可以从一个格子移动到与之连通的另一个格子，或者
 
 \subsubsection{天气} 
 
-\section{模型与表现}
+\section{使用的模型}
 
 \subsection{Search Agent}
 
-\subsection{Reinforcement Agent 在不同大小地图的表现}
-\subsubsection{简介}
-在这部分中我们采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
+\subsection{Reinforcement Agent}
+在强化学习的部分中我们采用了Q-Learning算法，其中与课堂中例子的区别是存在多个结束状态，
 算法上采用observation state-action pair作为Q table的索引。相比可以画在地图上的Q Table
 ，这样会形成一个多维的Q Table，更类似吃豆人的例子。 
 
@@ -142,20 +143,65 @@ $$
 Q(s,a) = \alpha R(s,a,s')+\gamma max_{a'}Q(s',a') + \frac{explore\_constant}{N(s,a)}
 $$
 其中， $N(s,a)$ 对应在 $s$状态下选择$a$行动的次数；explore\_constant 为超参数，默认为1。
+
+另外，我们在编写对应的函数时还考虑了训练时间的问题：为了避免在学习次数或其他参数改变
+时需要较多时间重新训练模型，函数中支持传入已经
+
+\subsection{Markov-Search Agent}
+
+\section{表现评估}
+\subsection{Search Agent}
+
+\subsection{Reinforcement Agent}
 \subsubsection{学习过程}
 在本游戏中，如果agent成功将乘客送达目的地，其得分一般为正数。
 并且由于存在200次的时限，agent的得分区间为[-2000,20)。在训练过程中可以发现，一个常见的失败情况是
 agent一直向着某个方向移动，并在-200分时退出本局。将不同学习率下agent训练不同次数的得分情况
-可视化后得到下图。
+可视化后得到下图。 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=6cm,height=8cm]{images/small_map_origin.png}
+  \includegraphics[width=4.8cm,height=6.4cm]{images/small_map_origin.png}
   \caption{scores under different learning rate and training times.}
-\end{figure}
+\end{figure} 
+
 从图中可以看出：随着学习率下降，达到正得分并收敛所需的训练次数逐渐减少。
-然而由于
+然而由于负数部分绝对值较大，较难判断完成游戏时采取的策略的好坏（即正分数的相对大小）
+因此采用
+$$
+f(x) = \left\{
+\begin{matrix}
+0 & x\leq 0 \\
+x & x>0\\ 
+\end{matrix}
+\right.
+$$ 
+
+函数来对得分进行处理，结果如下图左。收敛后的得分基本在8分左右，观察学习率为0.4的损失曲线
+得知在约1600次训练后loss基本稳定为零，即收敛到了最优解。
+\begin{figure}[htbp]
+  \centering
+  \subfigure[scores under relu function.]{
+  \includegraphics[scale = 0.15]{images/full_small_relu.png} \label{ab}
+  }
+  \subfigure[loss figure with error]{
+  \includegraphics[scale = 0.5]{images/loss_bar.png} \label{cd}
+  }
+  \caption{scores and loss}
+\end{figure} 
 
 \subsubsection{表现对比}
+在本游戏中，由于Search Agent一定会得到最优解，因此损失曲线同时也是其他Agent
+与Search Agent的得分差距。学习率>0.2 时Reinforcement Agent 基本都可以在2000次迭代后收敛
+并达到与Search Agent相同的最优效果。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale = 0.2]{images/comp_rein_search.png}
+  \caption{scores under different learning rate and training times.}
+\end{figure} 
+
+另外，在未收敛的情况下，很大一部分得分为-200；也有少部分情况有更低分。随着训练次数增加
+得分一般会呈现先快后慢的增长趋势。
+
 
 \subsection{Markov-Search Agent 在附加规则下的表现}
 
