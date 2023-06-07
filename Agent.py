@@ -272,7 +272,7 @@ class MarkovSearchAgent(SearchAgent):
             problist = np.array([.25, .25, .25, .25])
         else: # choose path according to distance and probability
             problist = self.calculateProb()
-        print("passenger probs:",problist)
+        #print("passenger probs:",problist)
         if self.pathstochoose.empty():
             for loc in range(4): # search a path for all 4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
@@ -299,7 +299,7 @@ class MarkovSearchAgent(SearchAgent):
         newproblist /= np.sum(newproblist)
         newloclist=loclist.copy()#renew loclist
         newloclist.remove(loc)
-        en=[0,0,0,0] #expected rewards of other locs given passenger not at this loc
+        en=[-200,-200,-200,-200] #expected rewards of other locs given passenger not at this loc
         for l in newloclist:
             en[l] = self._calculateExp(self.lenbetweenlocs[loc][l], l, newloclist, newproblist, e_arrival) - self.lenbetweenlocs[loc][l]
         ret += (1-problist[loc]) * np.max(np.array(en))
