@@ -272,21 +272,23 @@ class MarkovSearchAgent(SearchAgent):
             problist = np.array([.25, .25, .25, .25])
         else: # choose path according to distance and probability
             problist = self.calculateProb()
+        print("passenger probs:",problist)
         if self.pathstochoose.empty():
             for loc in range(4): # search a path for all 4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
-                self.pathstochoose.put([self._calculateExp(len(cpath),loc,range(4),problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
+                self.pathstochoose.put([-self._calculateExp(len(cpath),loc,range(4),problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
         else:
             leftlocs=[]
             while not self.pathstochoose.empty(): #empty and rebuild self.pathstochoose
                 leftlocs.append(self.pathstochoose.get()[2])
             for loc in leftlocs: # search a path for all #4 locs
                 cpath=self.search(self.env.encode(taxi_row, taxi_col, loc, 0))
-                self.pathstochoose.put([self._calculateExp(len(cpath),loc,leftlocs,problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
+                self.pathstochoose.put([-self._calculateExp(len(cpath),loc,leftlocs,problist,e_arrival), cpath, loc]) #actually calculates expected reward of each loc
         val, self.search_path, headfor = self.pathstochoose.get()
         if len(self.search_path)<=2: # near the loc but no passenger there
             val, self.search_path, headfor = self.pathstochoose.get() # get path to another loc
         #print("Path chosen:",self.search_path,", going for loc",headfor)
+        print("going for loc",headfor)
 
     def _calculateExp(self,lenpath,loc,loclist,problist,e_arrival):
         loclist=list(loclist)
@@ -299,7 +301,7 @@ class MarkovSearchAgent(SearchAgent):
         newloclist.remove(loc)
         en=[0,0,0,0] #expected rewards of other locs given passenger not at this loc
         for l in newloclist:
-            en[l] = self._calculateExp(self.lenbetweenlocs[loc], l, newloclist, newproblist, e_arrival) - self.lenbetweenlocs[loc]
+            en[l] = self._calculateExp(self.lenbetweenlocs[loc][l], l, newloclist, newproblist, e_arrival) - self.lenbetweenlocs[loc][l]
         ret += (1-problist[loc]) * np.max(np.array(en))
         return ret
 
