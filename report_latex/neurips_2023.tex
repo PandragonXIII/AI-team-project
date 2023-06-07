@@ -37,6 +37,7 @@
 \usepackage{graphicx}
 \usepackage{subfigure}
 \usepackage{amsmath}
+\usepackage{listings}
 
 
 \title{基于强化学习和马尔可夫模型的出租车代理}
@@ -200,7 +201,29 @@ $$
 \end{figure} 
 
 另外，在未收敛的情况下，很大一部分得分为-200；也有少部分情况有更低分。随着训练次数增加
-得分一般会呈现先快后慢的增长趋势。
+得分一般会呈现先快后慢的增长趋势。 
+
+此外，我们还对游戏环境进行了一定的改动，来测试在更大的地图下该AI的表现。
+大地图的字符串如下
+\begin{lstlisting}[language = C]
+"+-----------------------+",
+"| |R: : : : | : : | : : |",
+"| | : | : : | : :G| : : |",
+"| : : | | : : : : | : : |",
+"| : : | | | : : : | : : |",
+"| : : : | | | : : |B| : |",
+"| : : : | : | : : : | | |",
+"| : : :Y| : | : : : : : |",
+"+-----------------------+",
+\end{lstlisting}
+其中，| 代表墙壁; : 代表可以通过; R,G,B,Y代表四个上下车点。在经过测试后发现
+其学习过程的得分曲线与小地图中基本一致：都是类似反比函数的形式；
+且随学习率提高收敛所需训练次数逐渐降低，并在0.5左右达到最低值。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale = 0.2]{images/big_map_relu.png}
+  \caption{scores on big map after ReLU.}
+\end{figure} 
 
 
 \subsection{Markov-Search Agent 在附加规则下的表现}
